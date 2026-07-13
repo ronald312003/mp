@@ -96,15 +96,16 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Sin `DATABASE_URL`, la web usa el catálogo horneado en `public/data/catalog.json`
-(371 productos ya scrapeados), así que **funciona de inmediato** para previsualizar.
+Sin `DATABASE_URL`, la web usa el catálogo horneado en `data/catalog.json`
+(~810 productos ya scrapeados), así que **funciona de inmediato** para previsualizar.
 El **panel admin** en modo lectura también funciona; para crear/editar/eliminar necesita `DATABASE_URL`.
 
 ### Regenerar el catálogo (scraping real)
 ```bash
-npm run scrape       # scrapea Jomashop + Kambista y reescribe:
-                     #   - public/data/catalog.json
+npm run scrape       # scrapea Jomashop + Kambista + IA y reescribe:
+                     #   - data/catalog.json
                      #   - db/seed.sql
+npm run db:sql       # regenera SOLO db/seed.sql desde data/catalog.json (sin re-scrapear)
 npm run exchange     # solo actualiza el tipo de cambio (para un cron)
 ```
 
@@ -112,15 +113,24 @@ npm run exchange     # solo actualiza el tipo de cambio (para un cron)
 
 ## 3. Base de datos en Neon
 
+La BD es necesaria para que el **admin** persista lo que crea/edita/elimina. El sitio también
+funciona sin ella (solo lectura, desde `data/catalog.json`).
+
 1. Crea un proyecto en <https://neon.tech> → **Dashboard → SQL Editor**.
-2. Pega y ejecuta **`db/schema.sql`** (crea las tablas).
-3. Pega y ejecuta **`db/seed.sql`** (carga los 371 productos + colecciones + tipo de cambio).
+2. Pega y ejecuta **`db/schema.sql`** — crea las tablas. **Solo se ejecuta una vez.**
+3. Pega y ejecuta **`db/seed.sql`** — carga el catálogo (~810 productos + colecciones + tipo de cambio).
 4. Copia el **connection string** (usa el *Pooled connection*, incluye `?sslmode=require`).
 
-> Alternativa por consola:
+**Re-scrape / actualizar el catálogo (sincronización, no destructiva):** cuando vuelvas a
+scrapear (`npm run scrape` o `npm run db:sql`) y ejecutes de nuevo **`db/seed.sql`** en Neon,
+se **refresca lo scrapeado** (quita lo que ya no existe en el origen, agrega/actualiza lo nuevo)
+**sin borrar** los productos que creaste a mano en `/admin` ni los **precios override** que fijaste.
+Puedes re-ejecutar `db/seed.sql` cuantas veces quieras.
+
+> Alternativa por consola (aplica schema + seed a Neon):
 > ```bash
 > # con DATABASE_URL definida en el entorno
-> npm run db:push        # aplica schema.sql + seed.sql a Neon
+> npm run db:push
 > ```
 
 ---

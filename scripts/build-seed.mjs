@@ -20,6 +20,7 @@ import { finalPriceUsd } from "../lib/pricing.mjs";
 import { getExchangeRate } from "../lib/exchange.mjs";
 import { searchProductImage } from "../lib/image-search.mjs";
 import { classifyAll, aiEnabled } from "../lib/ai-classify.mjs";
+import { buildSeedSql } from "./seed-sql.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -87,10 +88,6 @@ async function resolveInspiration(products, cachePath) {
   console.log(`  · inspiración asignada: ${found}/${products.length} (${keys.length} combos)`);
 }
 
-const sqlStr = (v) =>
-  v === null || v === undefined ? "NULL" : `'${String(v).replace(/'/g, "''")}'`;
-const sqlNum = (v) => (v === null || v === undefined ? "NULL" : Number(v));
-
 // ¿La imagen actual es genérica (no es del producto real)?
 const isGenericImage = (p) =>
   !p.imageUrl || /unsplash\.com|placeholder|picsum/i.test(p.imageUrl);
@@ -124,73 +121,6 @@ async function resolveRealImages(products, cachePath) {
   console.log(`  · imágenes reales encontradas: ${found}/${targets.length}`);
 }
 
-function buildSeedSql(catalog) {
-  const lines = [];
-  lines.push("-- ============================================================");
-  lines.push("-- Maison Privée — datos semilla (generado por scripts/build-seed.mjs)");
-  lines.push(`-- Generado: ${catalog.generatedAt}`);
-  lines.push(`-- Productos: ${catalog.products.length}`);
-  lines.push("-- Ejecutar DESPUÉS de db/schema.sql");
-  lines.push("-- ============================================================");
-  lines.push("");
-  lines.push("BEGIN;");
-  lines.push("TRUNCATE product_collections, products, collections, settings RESTART IDENTITY CASCADE;");
-  lines.push("");
-
-  // settings
-  lines.push("-- Ajustes / tipo de cambio");
-  const settings = {
-    generated_at: catalog.generatedAt,
-    exchange_rate: String(catalog.exchange.rate),
-    exchange_sell: String(catalog.exchange.sell),
-    exchange_markup: String(catalog.exchange.markup),
-    exchange_source: catalog.exchange.source,
-    exchange_fetched_at: catalog.exchange.fetchedAt
-  };
-  for (const [k, v] of Object.entries(settings)) {
-    lines.push(
-      `INSERT INTO settings(key, value) VALUES (${sqlStr(k)}, ${sqlStr(v)}) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;`
-    );
-  }
-  lines.push("");
-
-  // collections
-  lines.push("-- Colecciones (outfits / estilos / temporadas)");
-  catalog.collections.forEach((c, i) => {
-    lines.push(
-      `INSERT INTO collections(slug, title, subtitle, description, kind, hero_image, sort_order) VALUES (` +
-        `${sqlStr(c.slug)}, ${sqlStr(c.title)}, ${sqlStr(c.subtitle)}, ${sqlStr(c.description)}, ` +
-        `${sqlStr(c.kind)}, ${sqlStr(c.heroImage)}, ${i + 1});`
-    );
-  });
-  lines.push("");
-
-  // products
-  lines.push("-- Productos");
-  for (const p of catalog.products) {
-    lines.push(
-      `INSERT INTO products(id, source, source_id, name, brand, type, gender, description, image_url, source_url, base_price_usd, final_price_usd, styling_note, inspiration_image) VALUES (` +
-        `${sqlStr(p.id)}, ${sqlStr(p.source)}, ${sqlStr(p.sourceId)}, ${sqlStr(p.name)}, ${sqlStr(p.brand)}, ` +
-        `${sqlStr(p.type)}, ${sqlStr(p.gender)}, ${sqlStr(p.description)}, ${sqlStr(p.imageUrl)}, ${sqlStr(p.sourceUrl)}, ` +
-        `${sqlNum(p.basePriceUsd)}, ${sqlNum(p.finalPriceUsd)}, ${sqlStr(p.stylingNote)}, ${sqlStr(p.inspirationImage)});`
-    );
-  }
-  lines.push("");
-
-  // product_collections
-  lines.push("-- Relación producto <-> colección");
-  for (const p of catalog.products) {
-    for (const slug of p.collections) {
-      lines.push(
-        `INSERT INTO product_collections(product_id, collection_slug) VALUES (${sqlStr(p.id)}, ${sqlStr(slug)}) ON CONFLICT DO NOTHING;`
-      );
-    }
-  }
-  lines.push("");
-  lines.push("COMMIT;");
-  lines.push("");
-  return lines.join("\n");
-}
 
 async function main() {
   console.log("→ Tipo de cambio (Kambista)…");

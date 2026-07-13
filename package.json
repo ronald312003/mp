@@ -12,6 +12,7 @@
     "scrape": "node scripts/build-seed.mjs",
     "scrape:jomashop": "node scripts/scrape-jomashop.mjs",
     "exchange": "node scripts/update-exchange.mjs",
+    "db:sql": "node scripts/gen-sql.mjs",
     "db:push": "node scripts/db-apply.mjs"
   },
   "dependencies": {
