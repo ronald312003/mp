@@ -228,3 +228,6 @@ scripts/                 scrapers Jomashop/TheOutnet, build-seed, update-exchang
 data/catalog.json        Catálogo horneado — INTERNO (fuera de public/, no descargable)
 render.yaml              Blueprint de despliegue en Render
 ```
+#   m p  
+ #   m p  
+ 
