@@ -229,3 +229,17 @@ body {
   .reveal { opacity: 1; transform: none; transition: none; }
   .slow-zoom, .nudge { animation: none; }
 }
+
+/* ===== Visor 3D de relojes (anatomía animada) ===== */
+@keyframes mp-gear-spin { to { transform: rotate(360deg); } }
+@keyframes mp-gear-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes mp-watch-float {
+  0%, 100% { transform: rotateY(-7deg) rotateX(3deg) translateY(0); }
+  50% { transform: rotateY(7deg) rotateX(-2deg) translateY(-6px); }
+}
+.mp-gear { transform-origin: center; animation: mp-gear-spin 16s linear infinite; }
+.mp-gear-rev { transform-origin: center; animation: mp-gear-spin-rev 22s linear infinite; }
+.mp-watch-float { animation: mp-watch-float 7s ease-in-out infinite; transform-style: preserve-3d; }
+@media (prefers-reduced-motion: reduce) {
+  .mp-gear, .mp-gear-rev, .mp-watch-float { animation: none; }
+}

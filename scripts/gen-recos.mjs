@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { geminiJSON, geminiEnabled } from "../lib/gemini.mjs";
+import { openaiJSON, aiEnabled as openaiEnabled } from "../lib/ai-classify.mjs";
 import { buildSeedSql } from "./seed-sql.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -88,10 +89,12 @@ Responde SOLO JSON:
 ${blocks}`;
 }
 
-/** Genera recomendaciones para products (muta recoIds/recoNote/recoContext). */
+/** Genera recomendaciones para products (muta recoIds/recoNote/recoContext).
+ *  Proveedores: Gemini primero; si su cuota gratuita se agota, cae
+ *  automáticamente a OpenAI (gpt-5.4-mini). Sin ninguno: reglas. */
 export async function generateRecos(products, cacheDir) {
-  const aiEnabled = geminiEnabled();
-  if (!aiEnabled) console.log("  · sin Gemini: recomendaciones profesionales por reglas");
+  const aiEnabled = geminiEnabled() || openaiEnabled();
+  if (!aiEnabled) console.log("  · sin Gemini/OpenAI: recomendaciones profesionales por reglas");
   mkdirSync(cacheDir, { recursive: true });
   const cachePath = resolve(cacheDir, "recos.json");
   const cache = loadJson(cachePath);
@@ -131,14 +134,24 @@ export async function generateRecos(products, cacheDir) {
   const pending = aiEnabled ? products.filter((p) => !cache[p.id]) : [];
   console.log(`  · pendientes: ${pending.length}/${products.length}`);
 
-  const BATCH = 8;
+  const BATCH = 14; // menos llamadas = menos cuota (nivel gratuito ≈ 10-20/min)
+  let provider = geminiEnabled() ? "gemini" : openaiEnabled() ? "openai" : null;
   for (let i = 0; i < pending.length; i += BATCH) {
+    if (i > 0 && provider === "gemini") await new Promise((r) => setTimeout(r, 6500)); // ritmo ~9/min
     const slice = pending.slice(i, i + BATCH).map((product) => ({
       product,
       candidates: candidatesFor(product, products)
     }));
-    const res = await geminiJSON(buildPrompt(slice));
-    const arr = Array.isArray(res) ? res : res ? [res] : [];
+    let res = null;
+    if (provider === "gemini") {
+      res = await geminiJSON(buildPrompt(slice), { tries: 2, maxQuotaWaits: 1 });
+      if (!res && openaiEnabled()) {
+        console.log("\n  · Gemini sin cuota disponible: continuando con OpenAI (gpt-5.4-mini)…");
+        provider = "openai";
+      }
+    }
+    if (!res && provider === "openai") res = await openaiJSON(buildPrompt(slice));
+    const arr = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : res ? [res] : [];
     for (const r of arr) {
       if (!r?.id || !byId.has(r.id)) continue;
       const prod = byId.get(r.id);

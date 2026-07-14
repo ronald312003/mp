@@ -6,6 +6,7 @@ import { getCatalog, getComplements } from "@/lib/data";
 import PriceTag from "@/components/PriceTag";
 import ProductCard from "@/components/ProductCard";
 import ProductGallery from "@/components/ProductGallery";
+import WatchShowcase3D from "@/components/WatchShowcase3D";
 import Reveal from "@/components/Reveal";
 
 export const revalidate = 3600;
@@ -20,6 +21,43 @@ const GENDER_LABEL: Record<string, string> = {
   men: "Hombre",
   women: "Mujer",
   unisex: "Unisex"
+};
+
+// Ambiente visual de la recomendación por contexto (degradados propios:
+// siempre elegantes y nunca dependen de imágenes externas que fallen).
+const CTX_STYLE: Record<string, { bg: string; tagline: string }> = {
+  invierno: {
+    bg: "linear-gradient(130deg, #232a33 0%, #3d4856 55%, #56637a 100%)",
+    tagline: "Capas, texturas y calidez para la temporada fría"
+  },
+  verano: {
+    bg: "linear-gradient(130deg, #b98a55 0%, #d9b98c 55%, #ecd9b8 100%)",
+    tagline: "Ligereza, luz y frescura para los días de calor"
+  },
+  noche: {
+    bg: "linear-gradient(130deg, #14100d 0%, #2b2118 55%, #4a3620 100%)",
+    tagline: "Presencia y estela para las salidas que importan"
+  },
+  oficina: {
+    bg: "linear-gradient(130deg, #3a332c 0%, #56493c 55%, #6f6152 100%)",
+    tagline: "Sobriedad impecable para la jornada profesional"
+  },
+  elegante: {
+    bg: "linear-gradient(130deg, #2e2620 0%, #574433 55%, #8a6d4b 100%)",
+    tagline: "Refinado y atemporal, sin esfuerzo aparente"
+  },
+  casual: {
+    bg: "linear-gradient(130deg, #55483c 0%, #7a6853 55%, #a08a6d 100%)",
+    tagline: "El día a día, con carácter y buen gusto"
+  },
+  deportivo: {
+    bg: "linear-gradient(130deg, #2c353c 0%, #45535d 55%, #5f7079 100%)",
+    tagline: "Energía y precisión para un ritmo activo"
+  },
+  "lujo-silencioso": {
+    bg: "linear-gradient(130deg, #211b17 0%, #40342a 55%, #6b5640 100%)",
+    tagline: "Lujo que no necesita anunciarse"
+  }
 };
 
 export async function generateMetadata({
@@ -57,11 +95,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
     (u, i) => (u.startsWith("/") ? u : `/api/img/${product.id}?i=${i}`)
   );
 
-  // Ambiente de la recomendación (invierno, noche, oficina…): la colección
-  // elegida por Gemini; si no hay, la imagen de inspiración del producto.
-  const ctxCollection = collections.find((c) => c.slug === product.recoContext);
-  const moodImage = ctxCollection?.heroImage ?? product.inspirationImage ?? null;
-  const moodTitle = ctxCollection?.title ?? "Inspiración";
+  // Ambiente de la recomendación (invierno, noche, oficina…): el contexto
+  // elegido por Gemini; si no hay, la primera colección del producto.
+  const ctxSlug = product.recoContext ?? product.collections[0] ?? "elegante";
+  const ctxCollection = collections.find((c) => c.slug === ctxSlug);
+  const ctx = CTX_STYLE[ctxSlug] ?? CTX_STYLE.elegante;
+  const moodTitle = ctxCollection?.title ?? "Tu estilo";
 
   return (
     <div className="container-shell py-8">
@@ -128,7 +167,14 @@ export default async function ProductPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* COMPLETA EL LOOK — selección de Gemini sobre nuestro catálogo */}
+      {/* Experiencia 3D exclusiva para relojes: anatomía animada */}
+      {product.type === "watch" && (
+        <WatchShowcase3D src={gallerySrcs[0]} alt={`${product.brand} ${product.name}`} />
+      )}
+
+      {/* COMPLETA EL LOOK — selección de Gemini sobre nuestro catálogo.
+          Todas las imágenes son de NUESTROS productos (fiables), para guiar
+          exactamente qué escoger como complemento del outfit. */}
       {(complements.length > 0 || product.stylingNote) && (
         <Reveal as="section" className="mt-24">
           <div className="mb-8">
@@ -138,51 +184,67 @@ export default async function ProductPage({ params }: { params: { id: string } }
           </div>
 
           <div className="overflow-hidden rounded-editorial ring-1 ring-line">
-            {/* Ambiente de la recomendación (invierno, noche, oficina…) */}
-            {moodImage && (
-              <div className="relative h-56 sm:h-72">
-                <Image
-                  src={moodImage}
-                  alt={`Ambiente: ${moodTitle}`}
-                  fill
-                  sizes="100vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
-                  <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
-                    Pensado para {moodTitle}
-                  </span>
-                  {product.recoNote && (
-                    <p className="mt-3 max-w-3xl font-serif text-lg leading-snug text-white sm:text-xl">
-                      “{product.recoNote}”
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-surface p-6 sm:p-8">
-              {!moodImage && product.recoNote && (
-                <p className="mb-6 max-w-3xl font-serif text-lg leading-snug text-content">
+            {/* Banda de contexto: ambiente elegido por la IA (sin fotos externas) */}
+            <div className="relative p-6 sm:p-8" style={{ background: ctx.bg }}>
+              <div
+                className="pointer-events-none absolute inset-0 opacity-40"
+                style={{
+                  background:
+                    "radial-gradient(80% 120% at 85% 0%, rgba(255,255,255,0.18), transparent 60%)"
+                }}
+              />
+              <span className="relative rounded-full bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
+                Pensado para {moodTitle}
+              </span>
+              <p className="relative mt-3 text-[12px] uppercase tracking-[0.14em] text-white/75">
+                {ctx.tagline}
+              </p>
+              {product.recoNote && (
+                <p className="relative mt-3 max-w-3xl font-serif text-lg leading-snug text-white sm:text-xl">
                   “{product.recoNote}”
                 </p>
               )}
-              <p className="mb-4 text-sm text-muted">
-                Piezas de nuestro catálogo elegidas para acompañar este {product.brand}:
-              </p>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                {complements.map((p) => (
-                  <ProductCard key={p.id} product={p} rate={exchange.rate} />
-                ))}
+            </div>
+
+            {/* Tablero del outfit: tu pieza + los complementos del catálogo */}
+            <div className="grid gap-0 bg-surface lg:grid-cols-[1fr_2.2fr]">
+              <div className="flex flex-col border-b border-line p-6 lg:border-b-0 lg:border-r">
+                <p className="text-[11px] uppercase tracking-luxe text-muted">Tu pieza</p>
+                <div className="relative mt-3 flex-1 overflow-hidden rounded-md bg-surface2 ring-1 ring-line min-h-[220px]">
+                  <Image
+                    src={gallerySrcs[0]}
+                    alt={`${product.brand} ${product.name}`}
+                    fill
+                    sizes="(max-width:1024px) 100vw, 25vw"
+                    className="object-contain p-6"
+                  />
+                </div>
+                <p className="mt-3 text-sm text-content">
+                  <span className="eyebrow block">{product.brand}</span>
+                  <span className="line-clamp-2">{product.name}</span>
+                </p>
               </div>
 
-              {product.stylingNote && (
-                <div className="mt-6 border-t border-line pt-5">
-                  <p className="text-[11px] uppercase tracking-luxe text-muted">Cómo llevarlo</p>
-                  <p className="mt-2 text-[15px] leading-relaxed text-content">{product.stylingNote}</p>
+              <div className="p-6 sm:p-8">
+                <p className="mb-4 text-sm text-muted">
+                  Añádele estas piezas de nuestro catálogo — elegidas por la IA para este{" "}
+                  {TYPE_LABEL[product.type].toLowerCase()}:
+                </p>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {complements.map((p) => (
+                    <ProductCard key={p.id} product={p} rate={exchange.rate} />
+                  ))}
                 </div>
-              )}
+
+                {product.stylingNote && (
+                  <div className="mt-6 border-t border-line pt-5">
+                    <p className="text-[11px] uppercase tracking-luxe text-muted">Cómo llevarlo</p>
+                    <p className="mt-2 text-[15px] leading-relaxed text-content">
+                      {product.stylingNote}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </Reveal>
