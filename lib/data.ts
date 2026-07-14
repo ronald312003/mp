@@ -65,7 +65,7 @@ export async function getCatalog(): Promise<Catalog> {
       heroImage: r.hero_image
     }));
 
-    const products: Product[] = (prodRows as any[]).map((r) => {
+    const storedProducts: Product[] = (prodRows as any[]).map((r) => {
       const override = r.price_override_usd != null ? Number(r.price_override_usd) : null;
       return {
         id: r.id,
@@ -90,6 +90,29 @@ export async function getCatalog(): Promise<Catalog> {
         recoContext: r.reco_context ?? null
       };
     });
+
+    // El catálogo scrapeado que viaja con cada deploy es la fuente canónica.
+    // Neon conserva los productos creados en admin y los overrides de precio.
+    // Esto evita servir un catálogo scrapeado antiguo si una rama/seed de la BD
+    // quedó desfasada, sin perder las modificaciones manuales importantes.
+    const baked = (fallbackCatalog as unknown as Catalog).products.filter(
+      (p) => !(p.type === "perfume" && p.basePriceUsd < 120)
+    );
+    const storedById = new Map(storedProducts.map((p) => [p.id, p]));
+    const bakedIds = new Set(baked.map((p) => p.id));
+    const products: Product[] = baked.map((p) => {
+      const stored = storedById.get(p.id);
+      const override = stored?.priceOverrideUsd ?? null;
+      return {
+        ...p,
+        priceOverrideUsd: override,
+        finalPriceUsd: override ?? p.finalPriceUsd
+      };
+    });
+    products.push(
+      ...storedProducts.filter((p) => p.source === "admin" && !bakedIds.has(p.id))
+    );
+    products.sort((a, b) => a.finalPriceUsd - b.finalPriceUsd);
 
     const data: Catalog = {
       generatedAt: settings.generated_at ?? new Date().toISOString(),

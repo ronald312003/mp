@@ -51,8 +51,21 @@ async function main() {
     await client.query(seed);
   }
 
-  const { rows } = await client.query("SELECT count(*)::int AS n FROM products");
-  console.log(`✓ Listo. Productos en la base: ${rows[0].n}`);
+  const { rows } = await client.query(`
+    SELECT
+      count(*)::int AS total,
+      count(*) FILTER (WHERE gender = 'men')::int AS men,
+      count(*) FILTER (WHERE gender = 'men' AND type = 'clothing')::int AS men_clothing,
+      count(*) FILTER (WHERE gender = 'men' AND type = 'shoes')::int AS men_shoes,
+      count(*) FILTER (WHERE type = 'perfume' AND base_price_usd < 120)::int AS low_perfumes
+    FROM products
+  `);
+  const stats = rows[0];
+  console.log(
+    `✓ Base verificada: ${stats.total} productos · hombre ${stats.men} ` +
+      `(ropa ${stats.men_clothing}, zapatos ${stats.men_shoes}) · ` +
+      `perfumes bajo $120: ${stats.low_perfumes}`
+  );
 
   await client.end();
 }
