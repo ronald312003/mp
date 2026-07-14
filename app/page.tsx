@@ -57,14 +57,13 @@ export default async function Home() {
             <h1 className="fade-up fade-up-2 mt-5 font-serif text-5xl leading-[0.98] text-content sm:text-7xl lg:text-[5.5rem]">
               Encontrar tu próxima pieza debería ser simple.
             </h1>
-            <p className="fade-up fade-up-3 mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">
-              Dinos para quién buscas, la ocasión y si tienes una marca favorita. Nosotros reducimos
-              el catálogo a una selección clara de ropa, calzado, relojes y perfumes.
+            <p className="fade-up fade-up-3 mt-6 max-w-xl text-xl leading-relaxed text-muted sm:text-2xl">
+              Cuatro preguntas. Una selección hecha para ti.
             </p>
             <div className="fade-up fade-up-4 mt-8 flex flex-wrap gap-3">
-              <Link href="/tienda?gender=men" className="btn-ghost">Hombre</Link>
-              <Link href="/tienda?gender=women" className="btn-ghost">Mujer</Link>
-              <Link href="/coleccion/lujo-silencioso" className="btn-ghost">Lujo silencioso</Link>
+              <Link href="/tienda?gender=men" className="btn-ghost">Él</Link>
+              <Link href="/tienda?gender=women" className="btn-ghost">Ella</Link>
+              <Link href="/casas" className="btn-ghost">Casas de moda</Link>
             </div>
           </div>
           <div className="fade-up fade-up-3">

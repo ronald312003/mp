@@ -41,6 +41,7 @@ export async function getCatalog(): Promise<Catalog> {
                  p.base_price_usd, p.final_price_usd, p.price_override_usd,
                  p.styling_note, p.inspiration_image,
                  p.reco_ids, p.reco_note, p.reco_context,
+                 p.reco_ids_w, p.reco_note_w, p.reco_context_w,
                  COALESCE(
                    (SELECT array_agg(pc.collection_slug)
                     FROM product_collections pc WHERE pc.product_id = p.id),
@@ -87,7 +88,10 @@ export async function getCatalog(): Promise<Catalog> {
         images: r.images ?? undefined,
         recoIds: r.reco_ids ?? undefined,
         recoNote: r.reco_note ?? null,
-        recoContext: r.reco_context ?? null
+        recoContext: r.reco_context ?? null,
+        recoIdsW: r.reco_ids_w ?? undefined,
+        recoNoteW: r.reco_note_w ?? null,
+        recoContextW: r.reco_context_w ?? null
       };
     });
 
@@ -169,21 +173,30 @@ export async function getProductsByCollection(slug: string): Promise<Product[]> 
 
 /**
  * Productos para "completar el look".
- * 1º: la selección hecha por Gemini sobre el catálogo real (recoIds).
+ * 1º: la selección hecha por la IA sobre el catálogo real (recoIds / recoIdsW).
  * 2º (respaldo): otras categorías que comparten colecciones con el producto.
+ * `audience` fija el destinatario del look: "m" (él) o "w" (ella); útil para
+ * productos unisex, que llevan un look por cada género.
  */
-export async function getComplements(product: Product, limit = 3): Promise<Product[]> {
+export async function getComplements(
+  product: Product,
+  limit = 3,
+  audience: "m" | "w" = "m"
+): Promise<Product[]> {
   const all = (await getCatalog()).products;
 
-  const recommended = product.recoIds?.length
-    ? product.recoIds
+  const targetGender = audience === "w" ? "women" : product.gender === "women" ? "women" : product.gender === "men" ? "men" : "men";
+  const ids = audience === "w" && product.recoIdsW?.length ? product.recoIdsW : product.recoIds;
+
+  const recommended = ids?.length
+    ? ids
       .map((id) => all.find((p) => p.id === id))
       .filter(
         (p): p is Product =>
           p !== undefined &&
           p.id !== product.id &&
           p.type !== product.type &&
-          matchGender(p.gender, product.gender)
+          matchGender(p.gender, targetGender)
       )
       .slice(0, limit)
     : [];
@@ -202,12 +215,12 @@ export async function getComplements(product: Product, limit = 3): Promise<Produ
       (p) =>
         p.id !== product.id &&
         p.type !== product.type &&
-        matchGender(p.gender, product.gender)
+        matchGender(p.gender, targetGender)
     )
     .map((p) => ({
       p,
       overlap: p.collections.filter((c) => set.has(c)).length,
-      exactGender: p.gender === product.gender ? 1 : 0,
+      exactGender: p.gender === targetGender ? 1 : 0,
       typeRank: order.indexOf(p.type) === -1 ? order.length : order.indexOf(p.type)
     }))
     .filter((x) => x.overlap > 0)

@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+/**
+ * Curaduría en 4 pasos: una pregunta por pantalla, tipografía grande,
+ * transición suave y auto-avance al elegir. Menos texto, más claro.
+ */
+
 const GENDERS = [
-  { value: "men", label: "Hombre" },
-  { value: "women", label: "Mujer" },
+  { value: "men", label: "Él" },
+  { value: "women", label: "Ella" },
   { value: "all", label: "Ver todo" }
 ];
 
@@ -18,125 +23,146 @@ const TYPES = [
 ];
 
 const OCCASIONS = [
-  { value: "casual", label: "Día a día", hint: "Cómodo y bien resuelto" },
-  { value: "oficina", label: "Oficina", hint: "Pulido y profesional" },
-  { value: "noche", label: "Noche", hint: "Cena, evento o celebración" },
-  { value: "verano", label: "Viaje", hint: "Ligero y versátil" },
-  { value: "elegante", label: "Regalo", hint: "Una elección especial" }
+  { value: "casual", label: "Día a día" },
+  { value: "oficina", label: "Oficina" },
+  { value: "noche", label: "Noche" },
+  { value: "verano", label: "Viaje" },
+  { value: "elegante", label: "Regalo" }
 ];
 
+const STEPS = ["¿Para quién?", "¿Qué buscas?", "¿La ocasión?", "¿Una casa favorita?"];
+
 export default function StyleConcierge({ brands }: { brands: string[] }) {
-  const [gender, setGender] = useState("men");
-  const [type, setType] = useState("all");
-  const [occasion, setOccasion] = useState("casual");
+  const [step, setStep] = useState(0);
+  const [gender, setGender] = useState<string | null>(null);
+  const [type, setType] = useState<string | null>(null);
+  const [occasion, setOccasion] = useState<string | null>(null);
   const [brand, setBrand] = useState("all");
 
   const href = useMemo(() => {
     const params = new URLSearchParams();
-    if (gender !== "all") params.set("gender", gender);
-    if (type !== "all") params.set("type", type);
+    if (gender && gender !== "all") params.set("gender", gender);
+    if (type && type !== "all") params.set("type", type);
     if (occasion) params.set("occasion", occasion);
     if (brand !== "all") params.set("brand", brand);
-    return `/tienda?${params.toString()}`;
+    const qs = params.toString();
+    return qs ? `/tienda?${qs}` : "/tienda";
   }, [brand, gender, occasion, type]);
 
+  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  const pick = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setTimeout(next, 220); // deja ver la selección y avanza solo
+  };
+
+  const bigBtn = (active: boolean) =>
+    `rounded-2xl border px-5 py-4 font-serif text-xl transition-all duration-300 sm:text-2xl ${
+      active
+        ? "border-accent bg-accent text-accent-fg shadow-lift"
+        : "border-line bg-bg text-content hover:-translate-y-0.5 hover:border-accent hover:shadow-lift"
+    }`;
+
   return (
-    <div className="rounded-[28px] border border-line bg-surface p-5 shadow-lift sm:p-7">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="eyebrow">Tu selección</p>
-          <h2 className="mt-2 font-serif text-3xl leading-tight text-content">
-            Cuéntanos qué necesitas
-          </h2>
+    <div className="overflow-hidden rounded-[28px] border border-line bg-surface shadow-lift">
+      {/* progreso */}
+      <div className="flex items-center justify-between px-6 pt-6 sm:px-8">
+        <div className="flex gap-2">
+          {STEPS.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Paso ${i + 1}`}
+              onClick={() => i < step && setStep(i)}
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                i === step ? "w-8 bg-accent" : i < step ? "w-4 bg-accent/50" : "w-4 bg-line"
+              }`}
+            />
+          ))}
         </div>
-        <span className="rounded-full bg-surface2 px-3 py-1.5 text-sm text-muted">1 minuto</span>
+        <span className="text-sm text-muted">
+          {step + 1} / {STEPS.length}
+        </span>
       </div>
 
-      <fieldset className="mt-7">
-        <legend className="text-base font-semibold text-content">¿Para quién estás buscando?</legend>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {GENDERS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setGender(option.value)}
-              aria-pressed={gender === option.value}
-              className={`rounded-2xl border px-3 py-3 text-sm font-medium transition sm:text-base ${
-                gender === option.value
-                  ? "border-accent bg-accent text-accent-fg"
-                  : "border-line bg-bg text-content hover:border-accent"
-              }`}
+      {/* pasos (carril deslizante) */}
+      <div className="relative">
+        <div
+          className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{ transform: `translateX(-${step * 100}%)` }}
+        >
+          {/* 1 · ¿Para quién? */}
+          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 0}>
+            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[0]}</h2>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              {GENDERS.map((o) => (
+                <button key={o.value} type="button" onClick={() => pick(setGender)(o.value)} className={bigBtn(gender === o.value)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* 2 · ¿Qué buscas? */}
+          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 1}>
+            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[1]}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {TYPES.map((o) => (
+                <button key={o.value} type="button" onClick={() => pick(setType)(o.value)} className={bigBtn(type === o.value)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* 3 · ¿La ocasión? */}
+          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 2}>
+            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[2]}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {OCCASIONS.map((o) => (
+                <button key={o.value} type="button" onClick={() => pick(setOccasion)(o.value)} className={bigBtn(occasion === o.value)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* 4 · ¿Una casa favorita? */}
+          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 3}>
+            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[3]}</h2>
+            <select
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              aria-label="Casa de moda"
+              className="field mt-6 text-lg"
             >
-              {option.label}
-            </button>
-          ))}
+              <option value="all">Quiero descubrir</option>
+              {brands.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+
+            <Link href={href} className="btn-accent mt-6 block w-full py-4 text-center text-lg">
+              Ver mi selección
+            </Link>
+          </section>
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset className="mt-7">
-        <legend className="text-base font-semibold text-content">¿Qué estás buscando?</legend>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {TYPES.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setType(option.value)}
-              aria-pressed={type === option.value}
-              className={`rounded-full border px-4 py-2.5 text-sm font-medium transition sm:text-base ${
-                type === option.value
-                  ? "border-accent bg-accent text-accent-fg"
-                  : "border-line bg-bg text-content hover:border-accent"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="mt-7">
-        <legend className="text-base font-semibold text-content">¿Para qué ocasión?</legend>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {OCCASIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setOccasion(option.value)}
-              aria-pressed={occasion === option.value}
-              className={`rounded-2xl border p-3.5 text-left transition ${
-                occasion === option.value
-                  ? "border-accent bg-surface2"
-                  : "border-line bg-bg hover:border-accent"
-              }`}
-            >
-              <span className="block text-base font-semibold text-content">{option.label}</span>
-              <span className="mt-0.5 block text-sm text-muted">{option.hint}</span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
-
-      <label className="mt-7 block text-base font-semibold text-content" htmlFor="concierge-brand">
-        ¿Tienes alguna marca en mente?
-      </label>
-      <select
-        id="concierge-brand"
-        value={brand}
-        onChange={(event) => setBrand(event.target.value)}
-        className="field mt-3"
-      >
-        <option value="all">No, quiero descubrir</option>
-        {brands.map((item) => (
-          <option key={item} value={item}>{item}</option>
-        ))}
-      </select>
-
-      <Link href={href} className="btn-accent mt-7 w-full text-center">
-        Ver mi selección
-      </Link>
-      <Link href="/tienda" className="mt-4 block text-center text-sm font-medium text-muted hover:text-content">
-        Prefiero explorar todo
-      </Link>
+      {/* pie: atrás / saltar */}
+      <div className="flex items-center justify-between border-t border-line px-6 py-4 sm:px-8">
+        <button
+          type="button"
+          onClick={() => setStep((s) => Math.max(0, s - 1))}
+          className={`text-base font-medium transition ${
+            step === 0 ? "pointer-events-none opacity-0" : "text-muted hover:text-content"
+          }`}
+        >
+          ← Atrás
+        </button>
+        <Link href="/tienda" className="text-base font-medium text-muted transition hover:text-content">
+          Explorar todo
+        </Link>
+      </div>
     </div>
   );
 }

@@ -35,9 +35,12 @@ CREATE TABLE IF NOT EXISTS products (
   styling_note      TEXT,                      -- IA: cómo complementar / armar el look
   inspiration_image TEXT,                      -- imagen de referencia del estilo
   images          TEXT[],                      -- galería (varias fotos del producto)
-  reco_ids        TEXT[],                      -- ids recomendados por Gemini ("completa el look")
+  reco_ids        TEXT[],                      -- "completa el look" (en unisex = para él)
   reco_note       TEXT,                        -- explicación elegante de la recomendación
   reco_context    TEXT,                        -- slug de colección que ambienta la recomendación
+  reco_ids_w      TEXT[],                      -- unisex: look para ella
+  reco_note_w     TEXT,
+  reco_context_w  TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -50,6 +53,9 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[];
 ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_ids TEXT[];
 ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_note TEXT;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_context TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_ids_w TEXT[];
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_note_w TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS reco_context_w TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_products_type   ON products(type);
 CREATE INDEX IF NOT EXISTS idx_products_brand  ON products(brand);

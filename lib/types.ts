@@ -19,9 +19,12 @@ export interface Product {
   stylingNote?: string | null; // IA: cómo complementarlo / armar el look
   inspirationImage?: string | null; // imagen de referencia del estilo (cómo quedaría)
   images?: string[]; // galería: varias fotos del producto (urls o rutas /generated/…)
-  recoIds?: string[]; // "completa el look" elegido por Gemini (ids del catálogo)
+  recoIds?: string[]; // "completa el look" (ids del catálogo; en unisex = look para él)
   recoNote?: string | null; // explicación elegante de la recomendación
   recoContext?: string | null; // slug de colección que ambienta la recomendación
+  recoIdsW?: string[]; // unisex: look para ella
+  recoNoteW?: string | null;
+  recoContextW?: string | null;
 }
 
 export interface Collection {

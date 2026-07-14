@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { getCatalog, getComplements } from "@/lib/data";
+import { styleVisuals } from "@/lib/style-visuals";
 import PriceTag from "@/components/PriceTag";
 import ProductCard from "@/components/ProductCard";
 import ProductGallery from "@/components/ProductGallery";
 import WatchShowcase3D from "@/components/WatchShowcase3D";
+import RecoLook, { type LookData } from "@/components/RecoLook";
 import Reveal from "@/components/Reveal";
 
 export const revalidate = 3600;
@@ -87,20 +88,39 @@ export default async function ProductPage({ params }: { params: { id: string } }
         p.collections.some((c) => product.collections.includes(c))
     )
     .slice(0, 4);
-  const complements = await getComplements(product, 3);
-
   // Galería: rutas locales (/generated/…) directas; las remotas pasan por el
   // proxy /api/img para no exponer el host de origen.
   const gallerySrcs = (product.images?.length ? product.images : [product.imageUrl]).map(
     (u, i) => (u.startsWith("/") ? u : `/api/img/${product.id}?i=${i}`)
   );
 
-  // Ambiente de la recomendación (invierno, noche, oficina…): el contexto
-  // elegido por Gemini; si no hay, la primera colección del producto.
-  const ctxSlug = product.recoContext ?? product.collections[0] ?? "elegante";
-  const ctxCollection = collections.find((c) => c.slug === ctxSlug);
-  const ctx = CTX_STYLE[ctxSlug] ?? CTX_STYLE.elegante;
-  const moodTitle = ctxCollection?.title ?? "Tu estilo";
+  // Looks de "Completa el look": uno por audiencia (unisex = para él y para
+  // ella, cada uno con su nota, su ambiente y sus piezas coherentes).
+  const audiences: ("m" | "w")[] =
+    product.gender === "unisex" ? ["m", "w"] : product.gender === "women" ? ["w"] : ["m"];
+  const looks: LookData[] = [];
+  for (const aud of audiences) {
+    const comps = await getComplements(product, 3, aud);
+    const isW = aud === "w" && product.gender === "unisex";
+    const note = isW ? product.recoNoteW ?? product.recoNote ?? null : product.recoNote ?? null;
+    const ctxSlug =
+      (isW ? product.recoContextW : product.recoContext) ?? product.collections[0] ?? "elegante";
+    const ctx = CTX_STYLE[ctxSlug] ?? CTX_STYLE.elegante;
+    const ctxTitle = collections.find((c) => c.slug === ctxSlug)?.title ?? "Tu estilo";
+    const visuals = styleVisuals(note, products, {
+      gender: aud === "w" ? "women" : "men",
+      excludeIds: new Set([product.id, ...comps.map((c) => c.id)])
+    });
+    looks.push({
+      aud,
+      title: aud === "w" ? "Para ella" : "Para él",
+      note,
+      ctxTitle,
+      ctxBg: ctx.bg,
+      products: comps,
+      visuals
+    });
+  }
 
   return (
     <div className="container-shell py-8">
@@ -172,81 +192,24 @@ export default async function ProductPage({ params }: { params: { id: string } }
         <WatchShowcase3D src={gallerySrcs[0]} alt={`${product.brand} ${product.name}`} />
       )}
 
-      {/* COMPLETA EL LOOK — selección de Gemini sobre nuestro catálogo.
-          Todas las imágenes son de NUESTROS productos (fiables), para guiar
-          exactamente qué escoger como complemento del outfit. */}
-      {(complements.length > 0 || product.stylingNote) && (
+      {/* COMPLETA EL LOOK — selección de la IA sobre nuestro catálogo.
+          Unisex = dos looks (Para él / Para ella), cada uno con su nota,
+          sus piezas y visuales de lo que la nota menciona. */}
+      {looks.some((l) => l.products.length > 0) && (
         <Reveal as="section" className="mt-24">
           <div className="mb-8">
             <p className="eyebrow">Estilismo por IA</p>
             <div className="rule-gold mt-3" />
-            <h2 className="mt-4 font-serif text-3xl text-content sm:text-4xl">Completa el look</h2>
+            <h2 className="mt-4 font-serif text-4xl text-content sm:text-5xl">Completa el look</h2>
           </div>
 
-          <div className="overflow-hidden rounded-editorial ring-1 ring-line">
-            {/* Banda de contexto: ambiente elegido por la IA (sin fotos externas) */}
-            <div className="relative p-6 sm:p-8" style={{ background: ctx.bg }}>
-              <div
-                className="pointer-events-none absolute inset-0 opacity-40"
-                style={{
-                  background:
-                    "radial-gradient(80% 120% at 85% 0%, rgba(255,255,255,0.18), transparent 60%)"
-                }}
-              />
-              <span className="relative rounded-full bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
-                Pensado para {moodTitle}
-              </span>
-              <p className="relative mt-3 text-[12px] uppercase tracking-[0.14em] text-white/75">
-                {ctx.tagline}
-              </p>
-              {product.recoNote && (
-                <p className="relative mt-3 max-w-3xl font-serif text-lg leading-snug text-white sm:text-xl">
-                  “{product.recoNote}”
-                </p>
-              )}
-            </div>
-
-            {/* Tablero del outfit: tu pieza + los complementos del catálogo */}
-            <div className="grid gap-0 bg-surface lg:grid-cols-[1fr_2.2fr]">
-              <div className="flex flex-col border-b border-line p-6 lg:border-b-0 lg:border-r">
-                <p className="text-[11px] uppercase tracking-luxe text-muted">Tu pieza</p>
-                <div className="relative mt-3 flex-1 overflow-hidden rounded-md bg-surface2 ring-1 ring-line min-h-[220px]">
-                  <Image
-                    src={gallerySrcs[0]}
-                    alt={`${product.brand} ${product.name}`}
-                    fill
-                    sizes="(max-width:1024px) 100vw, 25vw"
-                    className="object-contain p-6"
-                  />
-                </div>
-                <p className="mt-3 text-sm text-content">
-                  <span className="eyebrow block">{product.brand}</span>
-                  <span className="line-clamp-2">{product.name}</span>
-                </p>
-              </div>
-
-              <div className="p-6 sm:p-8">
-                <p className="mb-4 text-sm text-muted">
-                  Añádele estas piezas de nuestro catálogo — elegidas por la IA para este{" "}
-                  {TYPE_LABEL[product.type].toLowerCase()}:
-                </p>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {complements.map((p) => (
-                    <ProductCard key={p.id} product={p} rate={exchange.rate} />
-                  ))}
-                </div>
-
-                {product.stylingNote && (
-                  <div className="mt-6 border-t border-line pt-5">
-                    <p className="text-[11px] uppercase tracking-luxe text-muted">Cómo llevarlo</p>
-                    <p className="mt-2 text-[15px] leading-relaxed text-content">
-                      {product.stylingNote}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <RecoLook
+            looks={looks}
+            rate={exchange.rate}
+            mainSrc={gallerySrcs[0]}
+            mainBrand={product.brand}
+            mainName={product.name}
+          />
         </Reveal>
       )}
 

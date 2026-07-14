@@ -34,15 +34,23 @@ const saveJson = (p, data) => writeFileSync(p, JSON.stringify(data, null, 0), "u
 
 const matchGender = (a, b) => a === b || a === "unisex" || b === "unisex";
 
-// Candidatos de OTRAS categorías: comparten colección y género compatible.
-function candidatesFor(product, all, max = 22) {
+// Audiencias del look. Un producto de hombre lleva un look masculino; uno de
+// mujer, femenino; y un UNISEX lleva DOS looks (para él y para ella).
+const AUD_LABEL = { m: "hombre", w: "mujer" };
+const audGender = (aud) => (aud === "w" ? "women" : "men");
+const audiencesOf = (product) =>
+  product.gender === "unisex" ? ["m", "w"] : product.gender === "women" ? ["w"] : ["m"];
+
+// Candidatos de OTRAS categorías para una audiencia concreta.
+function candidatesFor(product, all, aud, max = 22) {
+  const target = audGender(aud);
   const set = new Set(product.collections);
   const scored = all
-    .filter((p) => p.id !== product.id && p.type !== product.type && matchGender(p.gender, product.gender))
+    .filter((p) => p.id !== product.id && p.type !== product.type && matchGender(p.gender, target))
     .map((p) => ({
       p,
       overlap: p.collections.filter((c) => set.has(c)).length,
-      exactGender: p.gender === product.gender ? 1 : 0,
+      exactGender: p.gender === target ? 1 : 0,
       priceDistance: Math.abs(Math.log((p.finalPriceUsd || 1) / (product.finalPriceUsd || 1)))
     }))
     .sort(
@@ -71,9 +79,9 @@ const line = (p) =>
 
 function buildPrompt(batch) {
   const blocks = batch
-    .map(({ product, candidates }, i) => {
-      return `### Producto ${i + 1}
-PRINCIPAL: ${line(product)} | género:${product.gender} | estilos:${product.collections.join(",")}
+    .map(({ product, aud, candidates }, i) => {
+      return `### Producto ${i + 1} [k=${product.id}|${aud}]
+PRINCIPAL: ${line(product)} | look para: ${AUD_LABEL[aud]} | estilos:${product.collections.join(",")}
 CANDIDATOS (elige SOLO de esta lista, por id):
 ${candidates.map(line).join("\n")}`;
     })
@@ -81,17 +89,18 @@ ${candidates.map(line).join("\n")}`;
 
   return `Eres el estilista de Maison Privée, una boutique de lujo silencioso en Lima, Perú (relojes, perfumes, ropa y calzado de diseñador).
 
-Para CADA producto principal, elige exactamente 3 candidatos de SU lista (ids exactos) que completen mejor el look: cada uno de una categoría distinta si es posible, coherentes en género, estilo y ocasión. Indica también el contexto que mejor ambienta el conjunto (uno de: ${CONTEXTS.join(", ")}) y una nota en español, elegante y concreta (máx. 45 palabras), que explique por qué esas piezas combinan — menciona la ocasión o temporada y, si recomiendas un perfume, describe brevemente su carácter olfativo.
+Para CADA producto principal, arma el look para el DESTINATARIO indicado ("look para: hombre" o "look para: mujer"): elige exactamente 3 candidatos de SU lista (ids exactos) adecuados a ese destinatario, cada uno de una categoría distinta si es posible, coherentes en estilo y ocasión. Indica también el contexto que mejor ambienta el conjunto (uno de: ${CONTEXTS.join(", ")}) y una nota en español, elegante y concreta (máx. 45 palabras), dirigida a ese destinatario, que explique por qué esas piezas combinan — menciona la ocasión o temporada y, si recomiendas un perfume, describe brevemente su carácter olfativo.
 
-Responde SOLO JSON:
-[{"id":"<id del principal>","picks":["id1","id2","id3"],"context":"<slug>","note":"<texto>"}]
+Responde SOLO JSON (usa la clave "k" tal como se te da en cada bloque):
+[{"k":"<k del principal>","picks":["id1","id2","id3"],"context":"<slug>","note":"<texto>"}]
 
 ${blocks}`;
 }
 
-/** Genera recomendaciones para products (muta recoIds/recoNote/recoContext).
- *  Proveedores: Gemini primero; si su cuota gratuita se agota, cae
- *  automáticamente a OpenAI (gpt-5.4-mini). Sin ninguno: reglas. */
+/** Genera recomendaciones por AUDIENCIA (muta recoIds/recoNote/recoContext y,
+ *  en unisex, también recoIdsW/recoNoteW/recoContextW: un look para él y otro
+ *  para ella). Proveedores: Gemini primero; si su cuota gratuita se agota,
+ *  cae automáticamente a OpenAI (gpt-5.4-mini). Sin ninguno: reglas. */
 export async function generateRecos(products, cacheDir) {
   const aiEnabled = geminiEnabled() || openaiEnabled();
   if (!aiEnabled) console.log("  · sin Gemini/OpenAI: recomendaciones profesionales por reglas");
@@ -100,7 +109,19 @@ export async function generateRecos(products, cacheDir) {
   const cache = loadJson(cachePath);
   const byId = new Map(products.map((p) => [p.id, p]));
 
-  const validPicks = (product, ids = []) => {
+  // Migración del caché antiguo (clave = id, sin audiencia): sirve para los
+  // productos con género definido; los unisex se regeneran (eran mixtos).
+  for (const p of products) {
+    if (!cache[p.id]) continue;
+    if (p.gender !== "unisex") {
+      const aud = p.gender === "women" ? "w" : "m";
+      if (!cache[`${p.id}|${aud}`]) cache[`${p.id}|${aud}`] = cache[p.id];
+    }
+    delete cache[p.id];
+  }
+
+  const validPicks = (product, aud, ids = []) => {
+    const target = audGender(aud);
     const seenTypes = new Set();
     return ids
       .map((id) => byId.get(id))
@@ -109,7 +130,7 @@ export async function generateRecos(products, cacheDir) {
           candidate &&
           candidate.id !== product.id &&
           candidate.type !== product.type &&
-          matchGender(candidate.gender, product.gender)
+          matchGender(candidate.gender, target)
       )
       .filter((candidate) => {
         if (seenTypes.has(candidate.type)) return false;
@@ -120,27 +141,34 @@ export async function generateRecos(products, cacheDir) {
       .slice(0, 3);
   };
 
-  // Un cambio de género o catálogo invalida recomendaciones cacheadas antiguas.
-  for (const product of products) {
-    if (!cache[product.id]) continue;
-    const picks = validPicks(product, cache[product.id].picks);
-    if (picks.length < Math.min(3, candidatesFor(product, products).length)) {
-      delete cache[product.id];
+  // Tareas: una por producto+audiencia (unisex = 2 looks).
+  const tasks = [];
+  for (const p of products) for (const aud of audiencesOf(p)) tasks.push({ product: p, aud, key: `${p.id}|${aud}` });
+
+  // Un cambio de catálogo invalida picks cacheados que ya no son válidos.
+  for (const t of tasks) {
+    const entry = cache[t.key];
+    if (!entry) continue;
+    const picks = validPicks(t.product, t.aud, entry.picks);
+    if (picks.length < Math.min(3, candidatesFor(t.product, products, t.aud).length)) {
+      delete cache[t.key];
     } else {
-      cache[product.id].picks = picks;
+      entry.picks = picks;
     }
   }
 
-  const pending = aiEnabled ? products.filter((p) => !cache[p.id]) : [];
-  console.log(`  · pendientes: ${pending.length}/${products.length}`);
+  const pending = aiEnabled ? tasks.filter((t) => !cache[t.key]) : [];
+  console.log(`  · pendientes: ${pending.length}/${tasks.length} looks`);
 
   const BATCH = 14; // menos llamadas = menos cuota (nivel gratuito ≈ 10-20/min)
   let provider = geminiEnabled() ? "gemini" : openaiEnabled() ? "openai" : null;
   for (let i = 0; i < pending.length; i += BATCH) {
     if (i > 0 && provider === "gemini") await new Promise((r) => setTimeout(r, 6500)); // ritmo ~9/min
-    const slice = pending.slice(i, i + BATCH).map((product) => ({
+    const slice = pending.slice(i, i + BATCH).map(({ product, aud, key }) => ({
       product,
-      candidates: candidatesFor(product, products)
+      aud,
+      key,
+      candidates: candidatesFor(product, products, aud)
     }));
     let res = null;
     if (provider === "gemini") {
@@ -153,22 +181,22 @@ export async function generateRecos(products, cacheDir) {
     if (!res && provider === "openai") res = await openaiJSON(buildPrompt(slice));
     const arr = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : res ? [res] : [];
     for (const r of arr) {
-      if (!r?.id || !byId.has(r.id)) continue;
-      const prod = byId.get(r.id);
-      const candidates = slice.find((item) => item.product.id === prod.id)?.candidates || [];
-      const allowed = new Set(candidates.map((candidate) => candidate.id));
+      const key = r?.k || r?.id; // tolera respuestas con "id" en vez de "k"
+      const item = slice.find((s) => s.key === key || s.product.id === key);
+      if (!item) continue;
+      const allowed = new Set(item.candidates.map((candidate) => candidate.id));
       const requested = (r.picks || []).filter((id) => allowed.has(id));
-      const picks = validPicks(prod, requested);
-      for (const candidate of candidates) {
+      const picks = validPicks(item.product, item.aud, requested);
+      for (const candidate of item.candidates) {
         if (picks.length >= 3) break;
         if (picks.includes(candidate.id)) continue;
         if (picks.some((id) => byId.get(id)?.type === candidate.type)) continue;
         picks.push(candidate.id);
       }
       if (!picks.length) continue;
-      cache[r.id] = {
+      cache[item.key] = {
         picks,
-        context: CONTEXTS.includes(r.context) ? r.context : prod.collections[0] || "elegante",
+        context: CONTEXTS.includes(r.context) ? r.context : item.product.collections[0] || "elegante",
         note: typeof r.note === "string" ? r.note.trim().slice(0, 400) : null
       };
     }
@@ -177,24 +205,50 @@ export async function generateRecos(products, cacheDir) {
   }
   if (pending.length) process.stdout.write("\n");
 
-  let applied = 0;
-  for (const p of products) {
-    const r = cache[p.id];
-    const candidates = candidatesFor(p, products);
-    const picks = validPicks(p, r?.picks || []);
-    for (const candidate of candidates) {
+  // Aplicar al catálogo: look principal (su género; unisex = él) + look W (ella).
+  const FALLBACK_NOTE =
+    "Una selección equilibrada por estilo, ocasión, nivel de precio y género para completar el conjunto.";
+  const resolveLook = (p, aud) => {
+    const r = cache[`${p.id}|${aud}`];
+    const picks = validPicks(p, aud, r?.picks || []);
+    for (const candidate of candidatesFor(p, products, aud)) {
       if (picks.length >= 3) break;
       if (picks.includes(candidate.id)) continue;
       if (picks.some((id) => byId.get(id)?.type === candidate.type)) continue;
       picks.push(candidate.id);
     }
-    if (!picks.length) continue;
-    p.recoIds = picks;
-    p.recoNote = r?.note || "Una selección equilibrada por estilo, ocasión, nivel de precio y género para completar el conjunto.";
-    p.recoContext = r?.context || p.collections[0] || "elegante";
-    applied++;
+    if (!picks.length) return null;
+    return {
+      picks,
+      note: r?.note || FALLBACK_NOTE,
+      context: r?.context || p.collections[0] || "elegante"
+    };
+  };
+
+  let applied = 0;
+  for (const p of products) {
+    const primaryAud = p.gender === "women" ? "w" : "m";
+    const primary = resolveLook(p, primaryAud);
+    if (primary) {
+      p.recoIds = primary.picks;
+      p.recoNote = primary.note;
+      p.recoContext = primary.context;
+      applied++;
+    }
+    if (p.gender === "unisex") {
+      const her = resolveLook(p, "w");
+      if (her) {
+        p.recoIdsW = her.picks;
+        p.recoNoteW = her.note;
+        p.recoContextW = her.context;
+      }
+    } else {
+      p.recoIdsW = null;
+      p.recoNoteW = null;
+      p.recoContextW = null;
+    }
   }
-  console.log(`  · recomendaciones aplicadas: ${applied}/${products.length}`);
+  console.log(`  · recomendaciones aplicadas: ${applied}/${products.length} productos`);
 }
 
 // ---------- ejecutable directo ----------
