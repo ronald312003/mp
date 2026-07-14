@@ -78,6 +78,37 @@ export async function generateRecos(products, cacheDir) {
   const cache = loadJson(cachePath);
   const byId = new Map(products.map((p) => [p.id, p]));
 
+  const validPicks = (product, ids = []) => {
+    const seenTypes = new Set();
+    return ids
+      .map((id) => byId.get(id))
+      .filter(
+        (candidate) =>
+          candidate &&
+          candidate.id !== product.id &&
+          candidate.type !== product.type &&
+          matchGender(candidate.gender, product.gender)
+      )
+      .filter((candidate) => {
+        if (seenTypes.has(candidate.type)) return false;
+        seenTypes.add(candidate.type);
+        return true;
+      })
+      .map((candidate) => candidate.id)
+      .slice(0, 3);
+  };
+
+  // Un cambio de género o catálogo invalida recomendaciones cacheadas antiguas.
+  for (const product of products) {
+    if (!cache[product.id]) continue;
+    const picks = validPicks(product, cache[product.id].picks);
+    if (picks.length < Math.min(3, candidatesFor(product, products).length)) {
+      delete cache[product.id];
+    } else {
+      cache[product.id].picks = picks;
+    }
+  }
+
   const pending = products.filter((p) => !cache[p.id]);
   console.log(`  · pendientes: ${pending.length}/${products.length}`);
 
@@ -92,16 +123,16 @@ export async function generateRecos(products, cacheDir) {
     for (const r of arr) {
       if (!r?.id || !byId.has(r.id)) continue;
       const prod = byId.get(r.id);
-      const okTypes = new Set();
-      const picks = (r.picks || [])
-        .filter((id) => byId.has(id) && byId.get(id).type !== prod.type)
-        .filter((id) => {
-          const t = byId.get(id).type;
-          if (okTypes.has(t)) return true; // permitimos repetir tipo si Gemini insiste
-          okTypes.add(t);
-          return true;
-        })
-        .slice(0, 3);
+      const candidates = slice.find((item) => item.product.id === prod.id)?.candidates || [];
+      const allowed = new Set(candidates.map((candidate) => candidate.id));
+      const requested = (r.picks || []).filter((id) => allowed.has(id));
+      const picks = validPicks(prod, requested);
+      for (const candidate of candidates) {
+        if (picks.length >= 3) break;
+        if (picks.includes(candidate.id)) continue;
+        if (picks.some((id) => byId.get(id)?.type === candidate.type)) continue;
+        picks.push(candidate.id);
+      }
       if (!picks.length) continue;
       cache[r.id] = {
         picks,
@@ -118,7 +149,7 @@ export async function generateRecos(products, cacheDir) {
   for (const p of products) {
     const r = cache[p.id];
     if (!r) continue;
-    const picks = (r.picks || []).filter((id) => byId.has(id));
+    const picks = validPicks(p, r.picks || []);
     if (!picks.length) continue;
     p.recoIds = picks;
     p.recoNote = r.note || null;

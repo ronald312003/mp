@@ -42,7 +42,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
   const productCollections = collections.filter((c) => product.collections.includes(c.slug));
   const related = products
-    .filter((p) => p.id !== product.id && p.collections.some((c) => product.collections.includes(c)))
+    .filter(
+      (p) =>
+        p.id !== product.id &&
+        (p.gender === product.gender || p.gender === "unisex" || product.gender === "unisex") &&
+        p.collections.some((c) => product.collections.includes(c))
+    )
     .slice(0, 4);
   const complements = await getComplements(product, 3);
 

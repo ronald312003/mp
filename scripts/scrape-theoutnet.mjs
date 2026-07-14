@@ -10,9 +10,11 @@
 //
 //  Por tanto: nombre + marca + categoría + imagen = REALES.
 //  El precio se ESTIMA en rango outlet (no es posible el real).
-//  Marcas permitidas: las 10 indicadas por el usuario.
+//  Marcas permitidas: selección original + líneas masculinas verificadas.
 // ============================================================
 
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   OUTNET_SITEMAPS_CLOTHING,
   OUTNET_SITEMAPS_SHOES,
@@ -26,17 +28,25 @@ const H = { "user-agent": UA };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchSitemap(name) {
-  try {
-    const r = await fetch("https://www.theoutnet.com/" + name, {
-      headers: H,
-      signal: AbortSignal.timeout(30000)
-    });
-    if (!r.ok) return [];
-    const t = await r.text();
-    return [...t.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  } catch {
-    return [];
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const r = await fetch("https://www.theoutnet.com/" + name, {
+        headers: H,
+        signal: AbortSignal.timeout(60000)
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const t = await r.text();
+      return [...t.matchAll(/<loc>([^<]+)<\/loc>/g)]
+        .map((m) => m[1])
+        .filter((url) => url.startsWith("https://www.theoutnet.com/en-us/shop/product/"));
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await sleep(1000 * attempt);
+    }
   }
+  console.warn(`  ! TheOutnet ${name}: ${lastError?.message || "sin respuesta"}`);
+  return [];
 }
 
 // Parsea una URL de producto:
@@ -53,7 +63,7 @@ function parseProductUrl(url) {
 
 function matchBrand(brandSlug) {
   for (const b of OUTNET_BRANDS) {
-    if (b.match.some((s) => brandSlug === s || brandSlug.startsWith(s))) return b.name;
+    if (b.match.some((s) => brandSlug === s || brandSlug.startsWith(s))) return b;
   }
   return null;
 }
@@ -66,12 +76,12 @@ function titleCase(slug) {
     .join(" ");
 }
 
-function inferGender(text) {
+function inferGender(text, fallback = "women") {
   const t = text.toLowerCase();
-  if (/\b(men|mens|man|male|tuxedo)\b/.test(t)) return "men";
+  if (/\b(men|mens|man|male|tuxedo|boxer|briefs)\b/.test(t)) return "men";
   if (/\b(dress|gown|skirt|blouse|bodysuit|bra|lingerie|jumpsuit|playsuit|ballet|pump|heel|espadrille)\b/.test(t))
     return "women";
-  return "women"; // TheOutnet es mayoritariamente womenswear
+  return fallback;
 }
 
 // Estimación de precio base (USD) en rango outlet, según tipo/categoría/marca.
@@ -116,8 +126,10 @@ async function imageOk(url) {
     return false;
   }
 }
-const napImage = (pn, view = "in") =>
-  `https://cache.net-a-porter.com/variants/images/${pn}/${view}/w920.jpg`;
+// CDN actual de TheOutnet. F es la vista frontal limpia; D/E/N son detalles
+// y R/Q son vistas editoriales alternativas (según el producto existe una).
+const outnetImage = (pn, view = "F") =>
+  `https://www.theoutnet.com/variants/images/${pn}/${view}/w1020_q80.jpg`;
 
 async function collectFromSitemaps(sitemaps, type) {
   const byBrand = new Map();
@@ -127,16 +139,37 @@ async function collectFromSitemaps(sitemaps, type) {
       if (!url.includes("/shop/product/")) continue;
       const p = parseProductUrl(url);
       if (!p) continue;
-      const brand = matchBrand(p.brandSlug);
-      if (!brand) continue;
-      if (!byBrand.has(brand)) byBrand.set(brand, []);
-      const arr = byBrand.get(brand);
-      if (arr.length >= OUTNET_PER_BRAND * 2) continue; // margen para descartes de imagen
-      arr.push({ ...p, brand, type });
+      const brandConfig = matchBrand(p.brandSlug);
+      if (!brandConfig) continue;
+      const brand = brandConfig.name;
+      if (!byBrand.has(brand)) byBrand.set(brand, new Map());
+      const items = byBrand.get(brand);
+      if (items.size >= OUTNET_PER_BRAND * 4) continue; // margen para balancear tipo/género
+      if (!items.has(p.partNumber)) {
+        items.set(p.partNumber, {
+          ...p,
+          brand,
+          type,
+          gender: inferGender(`${p.cat} ${p.nameSlug}`, brandConfig.gender || "women")
+        });
+      }
     }
     await sleep(150);
   }
-  return byBrand;
+  return new Map([...byBrand].map(([brand, items]) => [brand, [...items.values()]]));
+}
+
+function balancedProducts(clothing, shoes, limit) {
+  const pools = [[...clothing], [...shoes]];
+  const selected = [];
+  while (selected.length < limit && pools.some((p) => p.length)) {
+    for (const pool of pools) {
+      if (selected.length >= limit) break;
+      const item = pool.shift();
+      if (item) selected.push(item);
+    }
+  }
+  return selected;
 }
 
 export async function scrapeClothingAndShoes() {
@@ -144,18 +177,18 @@ export async function scrapeClothingAndShoes() {
   const clothing = await collectFromSitemaps(OUTNET_SITEMAPS_CLOTHING, "clothing");
   const shoes = await collectFromSitemaps(OUTNET_SITEMAPS_SHOES, "shoes");
 
-  const merged = new Map();
-  for (const [b, arr] of clothing) merged.set(b, [...arr]);
-  for (const [b, arr] of shoes) merged.set(b, [...(merged.get(b) || []), ...arr]);
-
-  for (const [brand, arr] of merged) {
+  const brands = new Set([...clothing.keys(), ...shoes.keys()]);
+  for (const brand of brands) {
+    const arr = balancedProducts(
+      clothing.get(brand) || [],
+      shoes.get(brand) || [],
+      OUTNET_PER_BRAND
+    );
     let taken = 0;
     for (const p of arr) {
-      if (taken >= OUTNET_PER_BRAND) break;
-      // imagen real por partNumber; si no existe, la buscará build-seed (Bing)
+      // Vista frontal oficial; si no existe, build-seed buscará respaldo web.
       let imageUrl = "";
-      if (await imageOk(napImage(p.partNumber, "in"))) imageUrl = napImage(p.partNumber, "in");
-      else if (await imageOk(napImage(p.partNumber, "ou"))) imageUrl = napImage(p.partNumber, "ou");
+      if (await imageOk(outnetImage(p.partNumber, "F"))) imageUrl = outnetImage(p.partNumber, "F");
       const base = estimatePrice(p.cat, p.nameSlug, p.type, brand, p.partNumber);
       out.push({
         source: "theoutnet",
@@ -163,20 +196,25 @@ export async function scrapeClothingAndShoes() {
         name: titleCase(p.nameSlug),
         brand,
         type: p.type,
-        gender: inferGender(p.cat + " " + p.nameSlug),
+        gender: p.gender,
         description: `${brand} — ${titleCase(p.nameSlug)}. Selección de diseñador estilo lujo silencioso.`,
         imageUrl, // puede quedar vacío -> build-seed busca imagen real (Bing)
+        images: imageUrl ? [imageUrl] : [],
         sourceUrl: p.url,
         basePriceUsd: base
       });
       taken++;
     }
-    console.log(`  · ${brand}: ${taken} prendas/zapatos`);
+    const men = out.filter((p) => p.brand === brand && p.gender === "men").length;
+    const byType = out
+      .filter((p) => p.brand === brand)
+      .reduce((a, p) => ((a[p.type] = (a[p.type] || 0) + 1), a), {});
+    console.log(`  · ${brand}: ${taken} productos (${men} hombre; ${byType.clothing || 0} ropa, ${byType.shoes || 0} zapatos)`);
   }
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   scrapeClothingAndShoes().then((r) => {
     console.log(`${r.length} productos reales de TheOutnet`);
     console.log(JSON.stringify(r.slice(0, 3), null, 2));

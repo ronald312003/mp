@@ -1,92 +1,150 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 
-/**
- * Visor de producto con galería y efecto 3D:
- *  - la imagen principal se inclina siguiendo el cursor (perspectiva)
- *  - un brillo suave acompaña el movimiento (acabado "vitrina")
- *  - miniaturas para cambiar entre las vistas del producto
- */
 export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: string }) {
+  const images = useMemo(() => [...new Set(srcs.filter(Boolean))], [srcs]);
   const [idx, setIdx] = useState(0);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const [fx, setFx] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
+  const [zoomed, setZoomed] = useState(false);
+  const current = images[Math.min(idx, images.length - 1)] ?? images[0];
 
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    const el = frameRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width; // 0..1
-    const py = (e.clientY - r.top) / r.height;
-    setFx({
-      ry: (px - 0.5) * 14, // giro horizontal
-      rx: (0.5 - py) * 10, // giro vertical
-      gx: px * 100,
-      gy: py * 100
-    });
-  }
-  const reset = () => setFx({ rx: 0, ry: 0, gx: 50, gy: 50 });
+  const move = (delta: number) => {
+    if (images.length < 2) return;
+    setIdx((value) => (value + delta + images.length) % images.length);
+  };
 
-  const main = srcs[Math.min(idx, srcs.length - 1)] ?? srcs[0];
+  useEffect(() => {
+    if (!zoomed) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setZoomed(false);
+      if (event.key === "ArrowLeft") move(-1);
+      if (event.key === "ArrowRight") move(1);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [zoomed, images.length]);
+
+  if (!current) return null;
 
   return (
     <div>
-      <div
-        ref={frameRef}
-        onMouseMove={onMove}
-        onMouseLeave={reset}
-        className="group relative aspect-square overflow-hidden rounded-editorial bg-surface ring-1 ring-line [perspective:1100px]"
-      >
-        <div
-          className="absolute inset-0 transition-transform duration-200 ease-out will-change-transform"
-          style={{
-            transform: `rotateX(${fx.rx}deg) rotateY(${fx.ry}deg) scale(1.04)`,
-            transformStyle: "preserve-3d"
-          }}
-        >
-          <Image
-            key={main}
-            src={main}
-            alt={alt}
-            fill
-            sizes="(max-width:1024px) 100vw, 50vw"
-            className="object-contain p-8"
-            priority
-          />
-        </div>
-
-        {/* brillo que sigue al cursor */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background: `radial-gradient(420px circle at ${fx.gx}% ${fx.gy}%, rgba(255,255,255,0.16), transparent 62%)`
-          }}
+      <div className="relative aspect-square overflow-hidden rounded-editorial bg-surface ring-1 ring-line">
+        <button
+          type="button"
+          onClick={() => setZoomed(true)}
+          className="absolute inset-0 z-10 cursor-zoom-in"
+          aria-label="Ampliar imagen del producto"
+        />
+        <Image
+          key={current}
+          src={current}
+          alt={`${alt}, vista ${idx + 1}`}
+          fill
+          sizes="(max-width:1024px) 100vw, 50vw"
+          className="object-contain p-6 sm:p-10"
+          priority
         />
 
-        {srcs.length > 1 && (
-          <span className="absolute bottom-3 right-3 rounded-full bg-bg/85 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
-            Vista {idx + 1} / {srcs.length}
-          </span>
+        <span className="absolute left-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
+          Vista {idx + 1} de {images.length}
+        </span>
+        <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
+          Ampliar
+        </span>
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); move(-1); }}
+              className="absolute left-3 top-1/2 z-30 -translate-y-1/2 rounded-full bg-bg/90 px-3 py-2 text-xl text-content shadow-lift ring-1 ring-line transition hover:bg-surface"
+              aria-label="Vista anterior"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); move(1); }}
+              className="absolute right-3 top-1/2 z-30 -translate-y-1/2 rounded-full bg-bg/90 px-3 py-2 text-xl text-content shadow-lift ring-1 ring-line transition hover:bg-surface"
+              aria-label="Vista siguiente"
+            >
+              ›
+            </button>
+          </>
         )}
       </div>
 
-      {srcs.length > 1 && (
-        <div className="mt-3 grid grid-cols-6 gap-2">
-          {srcs.map((s, i) => (
+      {images.length > 1 && (
+        <div className="mt-3 grid grid-cols-6 gap-2" role="tablist" aria-label="Vistas del producto">
+          {images.map((src, imageIndex) => (
             <button
-              key={s + i}
+              key={`${src}-${imageIndex}`}
               type="button"
-              onClick={() => setIdx(i)}
-              aria-label={`Vista ${i + 1}`}
+              onClick={() => setIdx(imageIndex)}
+              role="tab"
+              aria-selected={imageIndex === idx}
+              aria-label={`Mostrar vista ${imageIndex + 1}`}
               className={`relative aspect-square overflow-hidden rounded-md bg-surface2 ring-1 transition ${
-                i === idx ? "ring-accent" : "ring-line opacity-70 hover:opacity-100"
+                imageIndex === idx ? "ring-accent" : "ring-line opacity-70 hover:opacity-100"
               }`}
             >
-              <Image src={s} alt="" fill sizes="80px" className="object-contain p-1.5" />
+              <Image src={src} alt="" fill sizes="96px" className="object-contain p-1.5" />
             </button>
           ))}
+        </div>
+      )}
+
+      {zoomed && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Vista ampliada de ${alt}`}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm sm:p-8"
+          onClick={() => setZoomed(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setZoomed(false)}
+            className="absolute right-4 top-4 z-20 rounded-full bg-white/10 px-4 py-2 text-2xl text-white ring-1 ring-white/25 hover:bg-white/20"
+            aria-label="Cerrar imagen ampliada"
+          >
+            ×
+          </button>
+          <div className="relative h-full w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
+            <Image
+              key={`zoom-${current}`}
+              src={current}
+              alt={`${alt}, vista ampliada ${idx + 1}`}
+              fill
+              sizes="100vw"
+              className="object-contain"
+            />
+            {images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => move(-1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-white/10 px-4 py-3 text-3xl text-white ring-1 ring-white/25 hover:bg-white/20"
+                  aria-label="Vista anterior ampliada"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-white/10 px-4 py-3 text-3xl text-white ring-1 ring-white/25 hover:bg-white/20"
+                  aria-label="Vista siguiente ampliada"
+                >
+                  ›
+                </button>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

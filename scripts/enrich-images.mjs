@@ -16,7 +16,7 @@ import "./load-env.mjs";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { searchProductImage } from "../lib/image-search.mjs";
+import { searchProductImages } from "../lib/image-search.mjs";
 import { buildSeedSql } from "./seed-sql.mjs";
 import { MIN_PERFUME_BASE_USD } from "./config.mjs";
 
@@ -66,10 +66,10 @@ async function jomashopGalleries(skus) {
   return out;
 }
 
-// ---------- TheOutnet: vistas del CDN por partNumber ----------
-const NAP_VIEWS = ["in", "ou", "fr", "bk", "cu"];
-const napUrl = (pn, view) =>
-  `https://cache.net-a-porter.com/variants/images/${pn}/${view}/w920.jpg`;
+// ---------- TheOutnet: vistas actuales del CDN por partNumber ----------
+const OUTNET_VIEWS = ["F", "R", "Q", "D", "E", "N"];
+const outnetUrl = (pn, view) =>
+  `https://www.theoutnet.com/variants/images/${pn}/${view}/w1020_q80.jpg`;
 
 async function imageOk(url) {
   try {
@@ -113,46 +113,64 @@ export async function enrichImages(products, cacheDir) {
 
   // 2) TheOutnet: vistas alternativas del CDN
   const ton = products.filter((p) => p.source === "theoutnet");
-  const vCachePath = resolve(cacheDir, "nap-views.json");
+  const vCachePath = resolve(cacheDir, "outnet-views-v2.json");
   const vCache = loadJson(vCachePath);
   let probed = 0;
   await pool(ton, 6, async (p) => {
     const pn = String(p.sourceId).replace(/^ton-/, "");
     if (vCache[pn] === undefined) {
       const ok = [];
-      for (const view of NAP_VIEWS) {
-        if (await imageOk(napUrl(pn, view))) ok.push(napUrl(pn, view));
-      }
+      const checked = await Promise.all(
+        OUTNET_VIEWS.map(async (view) => {
+          const url = outnetUrl(pn, view);
+          return (await imageOk(url)) ? url : null;
+        })
+      );
+      ok.push(...checked.filter(Boolean));
       vCache[pn] = ok;
       probed++;
       if (probed % 25 === 0) saveJson(vCachePath, vCache);
     }
-    p.images = [...new Set([p.imageUrl, ...(vCache[pn] || [])].filter(Boolean))].slice(0, MAX_IMAGES);
+    const official = vCache[pn] || [];
+    const front = official.find((url) => url.includes(`/${pn}/F/`));
+    if (front) p.imageUrl = front;
+    p.images = [...new Set([front, ...official, p.imageUrl].filter(Boolean))]
+      .slice(0, MAX_IMAGES);
   });
   saveJson(vCachePath, vCache);
   const tonMulti = ton.filter((p) => (p.images?.length || 0) > 1).length;
   console.log(`  · TheOutnet: ${tonMulti}/${ton.length} con galería (2+ fotos)`);
 
-  // 3) Ropa/zapatos con pocas vistas: foto "en modelo" desde la web
-  const mCachePath = resolve(cacheDir, "model-shots.json");
+  // 3) Productos con pocas vistas: completar con búsqueda exacta por modelo/SKU.
+  // La fuente oficial siempre permanece primero; la web es solo respaldo.
+  const mCachePath = resolve(cacheDir, "supplemental-images-v2.json");
   const mCache = loadJson(mCachePath);
-  const fashion = products.filter(
-    (p) => (p.type === "clothing" || p.type === "shoes") && (p.images?.length || 0) < 3
-  );
+  const sparse = products.filter((p) => (p.images?.length || 0) < 3);
+  const intent = {
+    watch: "watch front back wrist case detail",
+    perfume: "perfume bottle box product detail",
+    clothing: "garment front back model wearing",
+    shoes: "shoes side sole on feet"
+  };
   let added = 0;
-  for (const p of fashion) {
+  for (const p of sparse) {
     const key = p.id;
     if (mCache[key] === undefined) {
-      const q = `${p.brand} ${p.name} ${p.type === "shoes" ? "on feet" : "model wearing"}`.slice(0, 120);
-      mCache[key] = (await searchProductImage(q)) || null;
+      const q = `${p.brand} ${p.name} ${p.sourceId || ""} ${intent[p.type] || "product detail"}`
+        .slice(0, 180);
+      mCache[key] = await searchProductImages(q, { limit: 3 });
       saveJson(mCachePath, mCache);
     }
-    if (mCache[key] && !p.images.includes(mCache[key])) {
-      p.images.push(mCache[key]);
-      added++;
+    const cached = Array.isArray(mCache[key]) ? mCache[key] : mCache[key] ? [mCache[key]] : [];
+    for (const url of cached) {
+      if (p.images.length >= MAX_IMAGES) break;
+      if (!p.images.includes(url)) {
+        p.images.push(url);
+        added++;
+      }
     }
   }
-  console.log(`  · Moda: ${added} fotos "en modelo" añadidas`);
+  console.log(`  · Respaldo web: ${added} vistas adicionales para productos con galería corta`);
 
   // Garantía: todo producto tiene al menos [imageUrl]
   for (const p of products) {

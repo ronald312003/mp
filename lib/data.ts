@@ -139,31 +139,56 @@ export async function getProductsByCollection(slug: string): Promise<Product[]> 
 export async function getComplements(product: Product, limit = 3): Promise<Product[]> {
   const all = (await getCatalog()).products;
 
-  if (product.recoIds?.length) {
-    const picks = product.recoIds
+  const recommended = product.recoIds?.length
+    ? product.recoIds
       .map((id) => all.find((p) => p.id === id))
-      .filter((p): p is Product => Boolean(p))
-      .slice(0, limit);
-    if (picks.length) return picks;
-  }
+      .filter(
+        (p): p is Product =>
+          p !== undefined &&
+          p.id !== product.id &&
+          p.type !== product.type &&
+          matchGender(p.gender, product.gender)
+      )
+      .slice(0, limit)
+    : [];
+  if (recommended.length >= limit) return recommended;
 
   const set = new Set(product.collections);
+  const preferredTypes: Record<string, string[]> = {
+    clothing: ["shoes", "watch", "perfume"],
+    shoes: ["clothing", "watch", "perfume"],
+    watch: ["clothing", "shoes", "perfume"],
+    perfume: ["clothing", "shoes", "watch"]
+  };
+  const order = preferredTypes[product.type] || ["clothing", "shoes", "watch", "perfume"];
   const scored = all
-    .filter((p) => p.id !== product.id && p.type !== product.type)
-    .map((p) => ({ p, overlap: p.collections.filter((c) => set.has(c)).length, gender: p.gender }))
+    .filter(
+      (p) =>
+        p.id !== product.id &&
+        p.type !== product.type &&
+        matchGender(p.gender, product.gender)
+    )
+    .map((p) => ({
+      p,
+      overlap: p.collections.filter((c) => set.has(c)).length,
+      exactGender: p.gender === product.gender ? 1 : 0,
+      typeRank: order.indexOf(p.type) === -1 ? order.length : order.indexOf(p.type)
+    }))
     .filter((x) => x.overlap > 0)
-    // preferir mismo género o unisex
     .sort(
       (a, b) =>
         b.overlap - a.overlap ||
-        (matchGender(b.gender, product.gender) ? 1 : 0) - (matchGender(a.gender, product.gender) ? 1 : 0)
+        b.exactGender - a.exactGender ||
+        a.typeRank - b.typeRank ||
+        Math.abs(product.finalPriceUsd - a.p.finalPriceUsd) -
+          Math.abs(product.finalPriceUsd - b.p.finalPriceUsd)
     );
 
   // Diversificar por tipo: un producto por tipo distinto primero.
-  const out: Product[] = [];
-  const usedTypes = new Set<string>();
+  const out: Product[] = [...recommended];
+  const usedTypes = new Set(out.map((p) => p.type));
   for (const { p } of scored) {
-    if (usedTypes.has(p.type)) continue;
+    if (usedTypes.has(p.type) || out.some((item) => item.id === p.id)) continue;
     out.push(p);
     usedTypes.add(p.type);
     if (out.length >= limit) break;

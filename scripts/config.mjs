@@ -72,6 +72,14 @@ export const OUTNET_SITEMAPS_SHOES = ["sitemap_en-us_shoes_1.xml"];
 
 // Marcas permitidas (slug en la URL -> nombre a mostrar). Se aceptan variantes.
 export const OUTNET_BRANDS = [
+  // Marcas/líneas presentes en la sección masculina de TheOutnet. Marcarlas
+  // evita inferir el género a partir de nombres ambiguos como "shirt" o "pants".
+  { match: ["dunhill"], name: "Dunhill", gender: "men" },
+  { match: ["frescobol-carioca"], name: "Frescobol Carioca", gender: "men" },
+  { match: ["mr-p"], name: "MR P.", gender: "men" },
+  { match: ["orlebar-brown"], name: "Orlebar Brown", gender: "men" },
+  { match: ["thom-browne"], name: "Thom Browne", gender: "men" },
+  { match: ["tom-ford"], name: "Tom Ford", gender: "men" },
   { match: ["saint-laurent"], name: "Saint Laurent" },
   { match: ["jimmy-choo"], name: "Jimmy Choo" },
   { match: ["valentino", "valentino-garavani"], name: "Valentino" },
