@@ -26,7 +26,7 @@ export const SCENT_SOURCES: Record<string, string> = {
   especiado: "https://cdn.myportfolio.com/2cb57fe6-d67c-4ed1-87ad-784adc765454/559a1402-462a-4e54-851d-72a53b385782_rw_1200.jpg?h=5be89f6b78a4ddf2542b9ce989ba3bec",
   ambar: "https://thumbs.dreamstime.com/b/photorealistic-close-up-raw-amber-gemstone-glowing-warm-light-macro-perspective-reveals-intricate-internal-structures-379517111.jpg",
   oud: "https://img.freepik.com/premium-photo/elegant-incense-holder-with-smoke-black-background-perfect-relaxation_1064559-114864.jpg?w=996",
-  tabaco: "https://img.freepik.com/premium-photo/closeup-dried-tobacco-leaves-with-rich-textures-earthy-tones-evoking-traditional-craft-tobacco-farming-processing_1323182-14247.jpg?w=2000",
+  tabaco: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Drying-tobacco-leaves.JPG",
   almizcle: "https://static.vecteezy.com/system/resources/previews/056/959/032/large_2x/elegant-beige-silk-fabric-draped-gracefully-on-a-smooth-surface-showcasing-delicate-textures-and-soft-reflections-in-natural-light-photo.jpg"
 };
 

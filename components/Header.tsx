@@ -3,6 +3,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const NAV = [
   { href: "/coleccion/lujo-silencioso", label: "Lujo Silencioso" },
+  { href: "/casas", label: "Casas" },
   { href: "/coleccion/elegante", label: "Elegante" },
   { href: "/coleccion/casual", label: "Casual" },
   { href: "/coleccion/oficina", label: "Oficina" },
@@ -19,7 +20,7 @@ export default function Header({ rate }: { rate: number }) {
             <span className="eyebrow mt-0.5">Quiet Luxury · Lima</span>
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex">
+          <nav className="hidden items-center gap-6 lg:flex">
             {NAV.map((n) => (
               <Link
                 key={n.href}
@@ -47,6 +48,7 @@ export default function Header({ rate }: { rate: number }) {
 
         <div className="no-scrollbar flex gap-7 overflow-x-auto pb-3 text-sm font-medium text-muted">
           {[
+            { href: "/casas", label: "Casas de moda" },
             { href: "/tienda?type=watch", label: "Relojes" },
             { href: "/tienda?type=perfume", label: "Perfumes" },
             { href: "/tienda?type=clothing", label: "Ropa" },
