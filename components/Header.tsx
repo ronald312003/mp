@@ -13,9 +13,9 @@ export default function Header({ rate }: { rate: number }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
       <div className="container-shell">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-20 items-center justify-between gap-4">
           <Link href="/" className="flex flex-col leading-none">
-            <span className="font-serif text-2xl tracking-wide text-content">Maison Privée</span>
+            <span className="font-serif text-3xl tracking-wide text-content">Maison Privée</span>
             <span className="eyebrow mt-0.5">Quiet Luxury · Lima</span>
           </Link>
 
@@ -24,7 +24,7 @@ export default function Header({ rate }: { rate: number }) {
               <Link
                 key={n.href}
                 href={n.href}
-                className="link-underline text-[13px] uppercase tracking-[0.14em] text-muted hover:text-content"
+                className="link-underline text-sm font-medium text-muted hover:text-content"
               >
                 {n.label}
               </Link>
@@ -38,14 +38,14 @@ export default function Header({ rate }: { rate: number }) {
             <ThemeToggle />
             <Link
               href="/tienda"
-              className="rounded-editorial border border-content px-4 py-1.5 text-[12px] uppercase tracking-[0.16em] text-content transition hover:bg-inverse hover:text-inverse-fg"
+              className="rounded-editorial border border-content px-4 py-2 text-sm font-semibold text-content transition hover:bg-inverse hover:text-inverse-fg"
             >
               Ver todo
             </Link>
           </div>
         </div>
 
-        <div className="no-scrollbar flex gap-7 overflow-x-auto pb-3 text-[12px] uppercase tracking-[0.16em] text-muted">
+        <div className="no-scrollbar flex gap-7 overflow-x-auto pb-3 text-sm font-medium text-muted">
           {[
             { href: "/tienda?type=watch", label: "Relojes" },
             { href: "/tienda?type=perfume", label: "Perfumes" },

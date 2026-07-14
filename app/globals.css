@@ -4,29 +4,29 @@
 
 /* ===== Tokens de tema (marrón claro + crema / oscuro espresso) ===== */
 :root {
-  --c-bg: 250 246 240;         /* crema cálido */
+  --c-bg: 252 249 245;         /* marfil cálido */
   --c-surface: 255 255 255;    /* tarjetas blancas */
-  --c-surface-2: 244 237 228;  /* superficie sutil */
-  --c-border: 228 216 201;
-  --c-text: 38 31 24;          /* marrón espresso más contrastado */
-  --c-muted: 104 90 74;        /* secundario más legible (no tan claro) */
-  --c-accent: 150 116 74;      /* marrón claro */
-  --c-accent-strong: 122 92 57;
+  --c-surface-2: 246 238 228;  /* arena clara */
+  --c-border: 226 210 192;
+  --c-text: 62 48 37;          /* cacao, menos oscuro */
+  --c-muted: 119 98 79;
+  --c-accent: 177 137 96;      /* caramelo claro */
+  --c-accent-strong: 151 112 75;
   --c-accent-fg: 255 255 255;
-  --c-inverse: 43 35 28;       /* botones oscuros en claro */
+  --c-inverse: 93 69 50;
   --c-inverse-fg: 250 246 240;
   color-scheme: light;
 }
 
 .dark {
-  --c-bg: 24 20 17;            /* espresso profundo */
-  --c-surface: 34 28 23;
-  --c-surface-2: 44 37 30;
-  --c-border: 60 50 41;
-  --c-text: 237 229 218;       /* crema */
-  --c-muted: 173 159 142;
-  --c-accent: 198 165 120;     /* dorado cálido */
-  --c-accent-strong: 214 184 143;
+  --c-bg: 48 40 33;            /* cacao claro */
+  --c-surface: 60 50 41;
+  --c-surface-2: 72 60 49;
+  --c-border: 96 80 65;
+  --c-text: 250 243 233;
+  --c-muted: 207 188 166;
+  --c-accent: 222 187 145;
+  --c-accent-strong: 235 205 169;
   --c-accent-fg: 26 20 15;
   --c-inverse: 237 229 218;    /* botones claros en oscuro */
   --c-inverse-fg: 30 24 19;
@@ -40,6 +40,8 @@ html {
 body {
   @apply bg-bg text-content font-sans antialiased;
   font-weight: 400;
+  font-size: 17px;
+  line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 /* Etiquetas/eyebrows con más cuerpo para que no se vean delgadas */
@@ -58,22 +60,22 @@ body {
 }
 
 .eyebrow {
-  @apply text-[11px] uppercase tracking-luxe text-muted;
+  @apply text-xs uppercase tracking-[0.2em] text-muted;
 }
 
 /* Botones editoriales: esquinas casi rectas, activo con micro-escala */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-editorial bg-inverse px-7 py-3.5 text-[12px] uppercase tracking-[0.18em] text-inverse-fg transition duration-200 hover:opacity-90 active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial bg-inverse px-7 py-3.5 text-sm font-semibold text-inverse-fg transition duration-200 hover:opacity-90 active:scale-[0.98];
 }
 .btn-ghost {
-  @apply inline-flex items-center justify-center rounded-editorial border border-line px-7 py-3.5 text-[12px] uppercase tracking-[0.18em] text-content transition duration-200 hover:border-accent hover:text-accent active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial border border-line bg-surface px-6 py-3 text-sm font-semibold text-content transition duration-200 hover:border-accent hover:text-accent active:scale-[0.98];
 }
 .btn-accent {
-  @apply inline-flex items-center justify-center rounded-editorial bg-accent px-7 py-3.5 text-[12px] uppercase tracking-[0.18em] text-accent-fg transition duration-200 hover:bg-accent-strong active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial bg-accent px-7 py-4 text-base font-semibold text-accent-fg transition duration-200 hover:bg-accent-strong active:scale-[0.98];
 }
 
 .field {
-  @apply w-full rounded-editorial border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition placeholder:text-muted focus:border-accent;
+  @apply w-full rounded-2xl border border-line bg-bg px-4 py-3.5 text-base text-content outline-none transition placeholder:text-muted focus:border-accent;
 }
 .label {
   @apply mb-1.5 block text-[12px] font-medium uppercase tracking-[0.12em] text-muted;
@@ -182,7 +184,7 @@ body {
   position: relative;
   overflow: hidden;
   background: rgb(var(--c-surface-2));
-  border-radius: 3px;
+  border-radius: 18px;
 }
 .skeleton::after {
   content: "";

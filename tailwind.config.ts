@@ -39,12 +39,12 @@ const config: Config = {
         shell: "1280px"
       },
       borderRadius: {
-        editorial: "3px"
+        editorial: "20px"
       },
       boxShadow: {
         // Ultra-difusa, muy baja opacidad (estética minimalista premium).
-        soft: "0 2px 10px rgb(40 30 20 / 0.04)",
-        lift: "0 6px 24px -10px rgb(40 30 20 / 0.10)"
+        soft: "0 8px 30px rgb(83 61 42 / 0.07)",
+        lift: "0 20px 48px -22px rgb(83 61 42 / 0.24)"
       }
     }
   },

@@ -11,8 +11,8 @@ export default function PriceTag({
 }) {
   const pen = usdToPen(usd, rate);
   const usdClass =
-    size === "lg" ? "text-2xl" : size === "sm" ? "text-sm" : "text-base";
-  const penClass = size === "lg" ? "text-base" : "text-xs";
+    size === "lg" ? "text-3xl" : size === "sm" ? "text-lg" : "text-xl";
+  const penClass = size === "lg" ? "text-lg" : "text-sm";
   return (
     <div className="flex flex-col">
       <span className={`font-serif ${usdClass} text-content`}>{fmtUsd(usd)}</span>

@@ -5,12 +5,11 @@
 // --- Jomashop: categorías de RELOJES (id de categoría GraphQL) ---
 // Cada categoría de marca contiene TODO su catálogo de relojes.
 // perBrand controla cuántos traer por marca (el catálogo real es enorme:
-// Citizen ~3400, Tissot ~440, Seiko ~290, Casio ~58).
+// Citizen ~3400, Tissot ~440 y Seiko ~290).
 export const WATCH_CATEGORIES = [
   { brand: "Seiko", categoryId: "1452", perBrand: 90 },
   { brand: "Citizen", categoryId: "1039", perBrand: 90 },
-  { brand: "Tissot", categoryId: "1510", perBrand: 90 },
-  { brand: "Casio", categoryId: "1020", perBrand: 58 } // Casio (incluye G-Shock / Edifice)
+  { brand: "Tissot", categoryId: "1510", perBrand: 90 }
 ];
 // Cuántas páginas escanear por marca de reloj antes de recortar (para alcanzar
 // modelos icónicos que están más abajo, p. ej. Citizen Tsuyosa ~pos 158).
@@ -23,9 +22,7 @@ export const HERO_WATCHES = [
   // Seiko
   "prospex", "presage", "5 sports", "seiko 5", "samurai", "turtle", "alpinist", "cocktail", "king seiko",
   // Tissot
-  "prx", "seastar", "le locle", "gentleman", "chrono xl", "supersport", "chemin des tourelles",
-  // Casio
-  "g-shock", "edifice", "oceanus", "pro trek", "ga-2100", "gshock", "casioak"
+  "prx", "seastar", "le locle", "gentleman", "chrono xl", "supersport", "chemin des tourelles"
 ];
 
 // --- Jomashop: PERFUMES ---
@@ -69,6 +66,13 @@ export const OUTNET_SITEMAPS_CLOTHING = [
   "sitemap_en-us_clothing_5.xml"
 ];
 export const OUTNET_SITEMAPS_SHOES = ["sitemap_en-us_shoes_1.xml"];
+
+// Fuente principal masculina: páginas oficiales /mens. A diferencia de los
+// sitemaps mixtos, garantizan el género y exponen precio outlet e imágenes.
+export const OUTNET_MEN_CLOTHING_PAGES = 5;
+export const OUTNET_MEN_SHOES_PAGES = 3;
+export const OUTNET_MEN_CLOTHING_LIMIT = 320;
+export const OUTNET_MEN_SHOES_LIMIT = 180;
 
 // Marcas permitidas (slug en la URL -> nombre a mostrar). Se aceptan variantes.
 export const OUTNET_BRANDS = [
@@ -179,7 +183,7 @@ export const COLLECTIONS = [
     kind: "style",
     sort: 8,
     description:
-      "Cronógrafos, G-Shock, sneakers y colonias enérgicas para un ritmo de vida activo.",
+      "Cronógrafos, sneakers y colonias enérgicas para un ritmo de vida activo.",
     heroImage:
       "https://images.unsplash.com/photo-1461141346587-763ab02bced9?auto=format&fit=crop&w=1600&q=80"
   }
@@ -209,7 +213,7 @@ export function assignCollections(p) {
   const set = new Set();
 
   if (p.type === "watch") {
-    if (KW.sport.test(n) || p.brand === "Casio") {
+    if (KW.sport.test(n)) {
       set.add("deportivo");
       set.add("casual");
     }

@@ -1,25 +1,28 @@
 // ============================================================
 //  TheOutnet (ropa + zapatos de diseñador) — PRODUCTOS REALES
 //
-//  El sitio bloquea las fichas/API con Akamai + IBM WCS (storeId
-//  numérico privado), por lo que NO se puede leer el precio en vivo.
-//  PERO los SITEMAPS sí son públicos y listan TODOS los productos
-//  reales (marca, categoría, nombre y partNumber). Y la imagen real
-//  del producto se obtiene del CDN de imágenes por su partNumber:
-//    https://cache.net-a-porter.com/variants/images/{pn}/in/w920.jpg
+//  La sección /mens expone JSON-LD con productos, precio e imágenes, pero
+//  Akamai puede bloquearla de forma intermitente. Se combina entonces:
+//   1) lectura directa y caché de /mens;
+//   2) snapshot versionado de URLs masculinas oficiales;
+//   3) sitemaps para conservar el catálogo femenino.
 //
-//  Por tanto: nombre + marca + categoría + imagen = REALES.
-//  El precio se ESTIMA en rango outlet (no es posible el real).
-//  Marcas permitidas: selección original + líneas masculinas verificadas.
+//  Las imágenes siempre salen del CDN oficial por partNumber. Si el JSON-LD
+//  no está disponible, el precio outlet se estima de forma determinista.
 // ============================================================
 
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import {
   OUTNET_SITEMAPS_CLOTHING,
   OUTNET_SITEMAPS_SHOES,
   OUTNET_BRANDS,
-  OUTNET_PER_BRAND
+  OUTNET_PER_BRAND,
+  OUTNET_MEN_CLOTHING_PAGES,
+  OUTNET_MEN_SHOES_PAGES,
+  OUTNET_MEN_CLOTHING_LIMIT,
+  OUTNET_MEN_SHOES_LIMIT
 } from "./config.mjs";
 
 const UA =
@@ -29,11 +32,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchSitemap(name) {
   let lastError;
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const r = await fetch("https://www.theoutnet.com/" + name, {
         headers: H,
-        signal: AbortSignal.timeout(60000)
+        signal: AbortSignal.timeout(15000)
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const t = await r.text();
@@ -42,7 +45,7 @@ async function fetchSitemap(name) {
         .filter((url) => url.startsWith("https://www.theoutnet.com/en-us/shop/product/"));
     } catch (error) {
       lastError = error;
-      if (attempt < 3) await sleep(1000 * attempt);
+      if (attempt < 2) await sleep(1000 * attempt);
     }
   }
   console.warn(`  ! TheOutnet ${name}: ${lastError?.message || "sin respuesta"}`);
@@ -131,6 +134,268 @@ async function imageOk(url) {
 const outnetImage = (pn, view = "F") =>
   `https://www.theoutnet.com/variants/images/${pn}/${view}/w1020_q80.jpg`;
 
+// ---------- Catálogo masculino oficial (/mens) ----------
+// Estas páginas contienen JSON-LD con 96 productos, precio outlet e imágenes.
+// Akamai es sensible al fingerprint: un UA mínimo funciona mejor que fingir un
+// Chrome completo. Cada página válida queda cacheada como respaldo.
+const MEN_UA = "Mozilla/5.0";
+const CACHE_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)), ".cache");
+const MEN_SNAPSHOT_PATH = resolve(
+  fileURLToPath(new URL(".", import.meta.url)),
+  "../data/outnet-men-snapshot.json"
+);
+
+async function fetchMensPage(kind, page) {
+  mkdirSync(CACHE_DIR, { recursive: true });
+  const cachePath = resolve(CACHE_DIR, `outnet-men-${kind}-${page}.html`);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const params = new URLSearchParams({
+      pageNumber: String(page),
+      cm_sp: `catalog-men-${kind}`,
+      refresh: `${Date.now()}-${attempt}`
+    });
+    try {
+      const response = await fetch(
+        `https://www.theoutnet.com/en-us/shop/mens/${kind}?${params}`,
+        {
+          headers: { "user-agent": MEN_UA, "accept-language": "en-US,en;q=0.9" },
+          signal: AbortSignal.timeout(12000)
+        }
+      );
+      const html = await response.text();
+      if (response.ok && html.length > 100000 && html.includes('"itemListElement"')) {
+        writeFileSync(cachePath, html, "utf8");
+        return html;
+      }
+    } catch {}
+    if (attempt < 2) await sleep(700 * attempt);
+  }
+  if (existsSync(cachePath)) {
+    console.warn(`  ! TheOutnet /mens/${kind} página ${page}: usando caché verificada`);
+    return readFileSync(cachePath, "utf8");
+  }
+  console.warn(`  ! TheOutnet /mens/${kind} página ${page}: bloqueada y sin caché`);
+  return "";
+}
+
+function extractJsonArray(html, marker) {
+  const markerAt = html.indexOf(`"${marker}"`);
+  if (markerAt < 0) return [];
+  const start = html.indexOf("[", markerAt);
+  if (start < 0) return [];
+  let depth = 0, quoted = false, escaped = false;
+  for (let i = start; i < html.length; i++) {
+    const ch = html[i];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') quoted = false;
+      continue;
+    }
+    if (ch === '"') quoted = true;
+    else if (ch === "[") depth++;
+    else if (ch === "]" && --depth === 0) {
+      try { return JSON.parse(html.slice(start, i + 1)); } catch { return []; }
+    }
+  }
+  return [];
+}
+
+const BRAND_NAMES = {
+  "OFF-WHITE™": "Off-White",
+  "FRESCOBOL CARIOCA": "Frescobol Carioca",
+  "ORLEBAR BROWN": "Orlebar Brown",
+  "THOM BROWNE": "Thom Browne",
+  "TOM FORD": "Tom Ford",
+  "MR P.": "MR P.",
+  "RAG & BONE": "Rag & Bone",
+  "PAUL SMITH": "Paul Smith",
+  "THE ELDER STATESMAN": "The Elder Statesman"
+};
+
+function displayBrand(value = "") {
+  if (BRAND_NAMES[value]) return BRAND_NAMES[value];
+  if (value !== value.toUpperCase()) return value;
+  return value.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
+}
+
+const SLUG_BRAND_NAMES = {
+  "acne-studios": "Acne Studios",
+  "alex-mill": "Alex Mill",
+  "fear-of-god-essentials": "Fear of God Essentials",
+  "frescobol-carioca": "Frescobol Carioca",
+  "gianvito-rossi": "Gianvito Rossi",
+  "jil-sander": "Jil Sander",
+  "mr-p": "MR P.",
+  "new-balance": "New Balance",
+  "off-white™": "Off-White",
+  "officine-generale": "Officine Générale",
+  "orlebar-brown": "Orlebar Brown",
+  "paul-smith": "Paul Smith",
+  "rag-bone": "Rag & Bone",
+  "the-elder-statesman": "The Elder Statesman",
+  "thom-browne": "Thom Browne",
+  "tod-s": "Tod's",
+  "tom-ford": "Tom Ford"
+};
+
+function brandFromSlug(value = "") {
+  let slug = value;
+  try { slug = decodeURIComponent(value); } catch {}
+  slug = slug.toLowerCase();
+  return SLUG_BRAND_NAMES[slug] || titleCase(slug);
+}
+
+// Respaldo versionado de URLs masculinas verificadas en las páginas oficiales.
+// Evita que un challenge temporal de Akamai reduzca el inventario en silencio.
+function loadMensSnapshot() {
+  if (!existsSync(MEN_SNAPSHOT_PATH)) return [];
+  let snapshot;
+  try { snapshot = JSON.parse(readFileSync(MEN_SNAPSHOT_PATH, "utf8")); } catch { return []; }
+  const items = [
+    ...(snapshot.clothing || []).map((url) => ({ url, type: "clothing" })),
+    ...(snapshot.shoes || []).map((url) => ({ url, type: "shoes" }))
+  ];
+  const byPart = new Map();
+  for (const entry of items) {
+    const parsed = parseProductUrl(entry.url);
+    if (!parsed) continue;
+    const brand = brandFromSlug(parsed.brandSlug);
+    const name = titleCase(parsed.nameSlug);
+    const imageUrl = outnetImage(parsed.partNumber, "F");
+    byPart.set(parsed.partNumber, {
+      ...parsed,
+      brand,
+      name,
+      type: entry.type,
+      gender: "men",
+      imageUrl,
+      images: [imageUrl],
+      basePriceUsd: estimatePrice(parsed.cat, parsed.nameSlug, entry.type, brand, parsed.partNumber)
+    });
+  }
+  const clothing = balanceMens(
+    [...byPart.values()].filter((item) => item.type === "clothing"),
+    OUTNET_MEN_CLOTHING_LIMIT,
+    "clothing"
+  );
+  const shoes = balanceMens(
+    [...byPart.values()].filter((item) => item.type === "shoes"),
+    OUTNET_MEN_SHOES_LIMIT,
+    "shoes"
+  );
+  return [...clothing, ...shoes].map((item) => ({
+    source: "theoutnet",
+    sourceId: `ton-${item.partNumber}`,
+    name: item.name,
+    brand: item.brand,
+    type: item.type,
+    gender: "men",
+    description: `${item.brand} — ${item.name}. Selección masculina de diseñador de The Outnet.`,
+    imageUrl: item.imageUrl,
+    images: item.images,
+    sourceUrl: item.url,
+    basePriceUsd: item.basePriceUsd
+  }));
+}
+
+function mensBucket(product) {
+  const text = `${product.cat} ${product.nameSlug}`.toLowerCase();
+  if (product.type === "shoes") {
+    if (/sneaker|trainer/.test(text)) return "sneakers";
+    if (/boot/.test(text)) return "boots";
+    if (/sandal|espadrille|slide|slipper/.test(text)) return "sandals";
+    return "formal";
+  }
+  if (/polo/.test(text)) return "polos";
+  if (/t-shirt|tee|tops/.test(text)) return "tees";
+  if (/shirt|overshirt/.test(text)) return "shirts";
+  if (/knit|sweater|cardigan|jumper/.test(text)) return "knitwear";
+  if (/jacket|coat|blazer|parka|trench/.test(text)) return "outerwear";
+  if (/pant|trouser|jean|denim/.test(text)) return "pants";
+  if (/short|swim/.test(text)) return "shorts";
+  if (/hoodie|sweat|track/.test(text)) return "sweats";
+  if (/suit|tuxedo/.test(text)) return "suits";
+  return "other";
+}
+
+function balanceMens(items, limit, type) {
+  const order = type === "shoes"
+    ? ["formal", "sneakers", "boots", "sandals"]
+    : ["shirts", "polos", "tees", "knitwear", "outerwear", "pants", "shorts", "sweats", "suits", "other"];
+  const pools = new Map(order.map((key) => [key, []]));
+  for (const item of items) pools.get(mensBucket(item))?.push(item);
+  const selected = [];
+  while (selected.length < limit && [...pools.values()].some((pool) => pool.length)) {
+    for (const key of order) {
+      if (selected.length >= limit) break;
+      const item = pools.get(key)?.shift();
+      if (item) selected.push(item);
+    }
+  }
+  return selected;
+}
+
+function parseMensPage(html, type) {
+  const elements = extractJsonArray(html, "itemListElement");
+  const out = [];
+  for (const element of elements) {
+    const item = element?.item;
+    const parsed = item?.url ? parseProductUrl(item.url) : null;
+    if (!item || !parsed) continue;
+    const specifications = item.offers?.priceSpecification || [];
+    const price = Number(specifications[0]?.price || item.offers?.price || 0);
+    const images = (item.image || [])
+      .map((image) => image?.url)
+      .filter(Boolean)
+      .map((url) => url.replace(/\/w\d+_q\d+\.jpg$/i, "/w1020_q80.jpg"));
+    if (!price || !images.length) continue;
+    const brand = displayBrand(item.brand?.name || titleCase(parsed.brandSlug));
+    out.push({
+      ...parsed,
+      brand,
+      type,
+      gender: "men",
+      name: item.name || titleCase(parsed.nameSlug),
+      imageUrl: images[0],
+      images: [...new Set(images)],
+      basePriceUsd: price
+    });
+  }
+  return out;
+}
+
+async function scrapeMensCategory(kind, pages, limit, type) {
+  const byPart = new Map();
+  // Con un snapshot versionado basta consultar la primera página para renovar
+  // datos actuales; una actualización manual del snapshot amplía el universo.
+  const pagesToFetch = existsSync(MEN_SNAPSHOT_PATH) ? Math.min(pages, 1) : pages;
+  for (let page = 1; page <= pagesToFetch; page++) {
+    const html = await fetchMensPage(kind, page);
+    for (const item of parseMensPage(html, type)) byPart.set(item.partNumber, item);
+  }
+  const selected = balanceMens([...byPart.values()], limit, type);
+  const buckets = selected.reduce((acc, item) => {
+    const key = mensBucket(item);
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  console.log(`  · /mens/${kind}: ${selected.length} productos`, buckets);
+  return selected.map((item) => ({
+    source: "theoutnet",
+    sourceId: `ton-${item.partNumber}`,
+    name: item.name,
+    brand: item.brand,
+    type: item.type,
+    gender: "men",
+    description: `${item.brand} — ${item.name}. Selección masculina de diseñador de The Outnet.`,
+    imageUrl: item.imageUrl,
+    images: item.images,
+    sourceUrl: item.url,
+    basePriceUsd: item.basePriceUsd
+  }));
+}
+
 async function collectFromSitemaps(sitemaps, type) {
   const byBrand = new Map();
   for (const sm of sitemaps) {
@@ -172,7 +437,7 @@ function balancedProducts(clothing, shoes, limit) {
   return selected;
 }
 
-export async function scrapeClothingAndShoes() {
+async function scrapeSitemapCatalog() {
   const out = [];
   const clothing = await collectFromSitemaps(OUTNET_SITEMAPS_CLOTHING, "clothing");
   const shoes = await collectFromSitemaps(OUTNET_SITEMAPS_SHOES, "shoes");
@@ -212,6 +477,52 @@ export async function scrapeClothingAndShoes() {
     console.log(`  · ${brand}: ${taken} productos (${men} hombre; ${byType.clothing || 0} ropa, ${byType.shoes || 0} zapatos)`);
   }
   return out;
+}
+
+export async function scrapeClothingAndShoes() {
+  // Secuencial a propósito: Akamai bloquea ráfagas paralelas a /mens.
+  const menClothing = await scrapeMensCategory(
+    "clothing",
+    OUTNET_MEN_CLOTHING_PAGES,
+    OUTNET_MEN_CLOTHING_LIMIT,
+    "clothing"
+  );
+  const menShoes = await scrapeMensCategory(
+    "shoes",
+    OUTNET_MEN_SHOES_PAGES,
+    OUTNET_MEN_SHOES_LIMIT,
+    "shoes"
+  );
+  const sitemapCatalog = process.env.SKIP_OUTNET_SITEMAPS === "1"
+    ? []
+    : await scrapeSitemapCatalog();
+
+  // /mens manda para hombre; el sitemap mixto se conserva para mujer. Si
+  // Akamai bloquea todas las páginas y no existe caché, se mantiene el pequeño
+  // respaldo masculino inferido por marca en lugar de dejar el catálogo vacío.
+  // La captura oficial versionada garantiza amplitud; el JSON-LD directo manda
+  // cuando está disponible porque aporta el precio actual de liquidación.
+  const snapshotMen = loadMensSnapshot();
+  const verifiedMenMap = new Map();
+  for (const product of [...snapshotMen, ...menClothing, ...menShoes]) {
+    verifiedMenMap.set(product.sourceId, product);
+  }
+  const directMen = [...verifiedMenMap.values()];
+  console.log(
+    `  · respaldo masculino oficial: ${snapshotMen.length}; inventario verificado: ${directMen.length}`
+  );
+  const fallback = sitemapCatalog.filter(
+    (product) => directMen.length === 0 || product.gender !== "men"
+  );
+  const merged = new Map();
+  for (const product of [...fallback, ...directMen]) merged.set(product.sourceId, product);
+  const products = [...merged.values()];
+  console.log(
+    `  · TheOutnet final: ${products.length} ` +
+      `(${products.filter((p) => p.gender === "men" && p.type === "clothing").length} ropa hombre, ` +
+      `${products.filter((p) => p.gender === "men" && p.type === "shoes").length} zapatos hombre)`
+  );
+  return products;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {

@@ -16,7 +16,7 @@ import { createHash } from "node:crypto";
 
 import { scrapeWatches, scrapePerfumes } from "./scrape-jomashop.mjs";
 import { scrapeClothingAndShoes } from "./scrape-theoutnet.mjs";
-import { COLLECTIONS, assignCollections } from "./config.mjs";
+import { COLLECTIONS, MIN_PERFUME_BASE_USD, assignCollections } from "./config.mjs";
 import { finalPriceUsd } from "../lib/pricing.mjs";
 import { getExchangeRate } from "../lib/exchange.mjs";
 import { searchProductImage } from "../lib/image-search.mjs";
@@ -130,20 +130,95 @@ async function resolveRealImages(products, cachePath) {
   console.log(`  · imágenes reales encontradas: ${found}/${targets.length}`);
 }
 
+function loadPreviousJomashop() {
+  const catalogPath = resolve(ROOT, "data/catalog.json");
+  if (!existsSync(catalogPath)) return { watches: [], perfumes: [] };
+  let catalog;
+  try { catalog = JSON.parse(readFileSync(catalogPath, "utf8")); } catch { return { watches: [], perfumes: [] }; }
+  const products = (catalog.products || [])
+    .filter((product) => product.source === "jomashop")
+    .filter((product) => product.brand?.toLowerCase() !== "casio")
+    .map((product) => ({
+      source: product.source,
+      sourceId: product.sourceId,
+      name: product.name,
+      brand: product.brand,
+      type: product.type,
+      gender: product.gender,
+      description: product.description,
+      imageUrl: product.imageUrl,
+      images: product.images,
+      sourceUrl: product.sourceUrl,
+      basePriceUsd: product.basePriceUsd
+    }));
+  return {
+    watches: products.filter((product) => product.type === "watch"),
+    perfumes: products.filter(
+      (product) => product.type === "perfume" && product.basePriceUsd >= MIN_PERFUME_BASE_USD
+    )
+  };
+}
+
+function loadPreviousOutnetWomen() {
+  const catalogPath = resolve(ROOT, "data/catalog.json");
+  if (!existsSync(catalogPath)) return [];
+  let catalog;
+  try { catalog = JSON.parse(readFileSync(catalogPath, "utf8")); } catch { return []; }
+  return (catalog.products || [])
+    .filter((product) => product.source === "theoutnet" && product.gender !== "men")
+    .map((product) => ({
+      source: product.source,
+      sourceId: product.sourceId,
+      name: product.name,
+      brand: product.brand,
+      type: product.type,
+      gender: product.gender,
+      description: product.description,
+      imageUrl: product.imageUrl,
+      images: product.images,
+      sourceUrl: product.sourceUrl,
+      basePriceUsd: product.basePriceUsd
+    }));
+}
+
 
 async function main() {
   console.log("→ Tipo de cambio (Kambista)…");
   const exchange = await getExchangeRate();
   console.log(`  venta=${exchange.sell}  +${exchange.markup}  =>  S/ ${exchange.rate}  (${exchange.source})`);
 
-  console.log("→ Relojes (Jomashop)…");
-  const watches = await scrapeWatches();
-  console.log("→ Perfumes (Jomashop)…");
-  const perfumes = await scrapePerfumes();
+  const reuseJomashop = process.env.REUSE_JOMASHOP_CATALOG === "1";
+  let watches, perfumes;
+  if (reuseJomashop) {
+    ({ watches, perfumes } = loadPreviousJomashop());
+    console.log(`→ Jomashop: reutilizando catálogo verificado (${watches.length} relojes, ${perfumes.length} perfumes)…`);
+  } else {
+    console.log("→ Relojes (Jomashop)…");
+    watches = await scrapeWatches();
+    console.log("→ Perfumes (Jomashop)…");
+    perfumes = await scrapePerfumes();
+  }
   console.log("→ Ropa y zapatos (TheOutnet — catálogo curado)…");
-  const fashion = await scrapeClothingAndShoes();
+  const scrapedFashion = await scrapeClothingAndShoes();
+  const scrapedWomen = scrapedFashion.filter((product) => product.gender !== "men");
+  const reusePreviousWomen =
+    process.env.REUSE_OUTNET_WOMEN === "1" || scrapedWomen.length < 100;
+  const previousWomen = reusePreviousWomen
+    ? loadPreviousOutnetWomen()
+    : [];
+  const fashionMap = new Map();
+  for (const product of [...previousWomen, ...scrapedFashion]) {
+    fashionMap.set(product.sourceId, product);
+  }
+  const fashion = [...fashionMap.values()];
+  if (previousWomen.length) {
+    console.log(`  · TheOutnet: ${previousWomen.length} productos femeninos verificados reutilizados`);
+  }
 
-  const rawAll = [...watches, ...perfumes, ...fashion];
+  // Casio se gestionará exclusivamente de forma manual desde /admin.
+  const rawAll = [...watches, ...perfumes, ...fashion].filter(
+    (product) => product.brand?.toLowerCase() !== "casio"
+  );
 
   // dedupe por id (aún NO descartamos por imagen: primero se busca en la web)
   const map = new Map();
@@ -204,17 +279,23 @@ async function main() {
   console.log("→ Galerías de imágenes (varias vistas por producto)…");
   await enrichImages(products, cacheDir);
 
-  // Recomendaciones "completa el look" con Gemini + imágenes editoriales AI
+  // Siempre genera recomendaciones válidas. Gemini mejora la redacción cuando
+  // está configurado; sin API se conserva el filtrado profesional por género,
+  // categoría, ocasión y nivel de precio.
   if (geminiEnabled()) {
-    console.log("→ Recomendaciones de estilo (Gemini)…");
-    await generateRecos(products, cacheDir);
+    console.log("→ Recomendaciones de estilo (Gemini + reglas estrictas)…");
+  } else {
+    console.log("→ Recomendaciones de estilo (reglas estrictas)…");
+  }
+  await generateRecos(products, cacheDir);
+
+  // Las imágenes generativas sí requieren Gemini y un límite explícito.
+  if (geminiEnabled()) {
     const imgLimit = Number(process.env.GEMINI_IMG_LIMIT || 0);
     if (imgLimit > 0) {
       console.log(`→ Imágenes editoriales AI (límite ${imgLimit})…`);
       await generateAiImages(products, cacheDir, imgLimit);
     }
-  } else {
-    console.log("→ (sin GEMINI_API_KEY: recomendaciones por reglas)");
   }
 
   const catalog = {

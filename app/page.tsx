@@ -4,175 +4,133 @@ import CollectionCard from "@/components/CollectionCard";
 import ProductCard from "@/components/ProductCard";
 import TypeStrip from "@/components/TypeStrip";
 import Reveal from "@/components/Reveal";
+import StyleConcierge from "@/components/StyleConcierge";
 import type { Product } from "@/lib/types";
 
 export const revalidate = 3600;
 
 function pickFeatured(products: Product[], type: string, n: number) {
-  return products.filter((p) => p.type === type).slice(0, n);
+  return products.filter((product) => product.type === type).slice(0, n);
 }
 
 export default async function Home() {
   const { collections, products, exchange } = await getCatalog();
-
   const counts = new Map<string, number>();
-  for (const p of products) for (const c of p.collections) counts.set(c, (counts.get(c) ?? 0) + 1);
+  for (const product of products) {
+    for (const collection of product.collections) {
+      counts.set(collection, (counts.get(collection) ?? 0) + 1);
+    }
+  }
 
-  const hero = collections.find((c) => c.slug === "lujo-silencioso") ?? collections[0];
-  const rest = collections.filter((c) => c.slug !== hero.slug);
+  const preferredBrands = [
+    "Tom Ford", "Thom Browne", "Sandro", "Frescobol Carioca", "Orlebar Brown",
+    "Saint Laurent", "Ferragamo", "Versace", "Seiko", "Tissot", "Citizen",
+    "Creed", "Dior", "Valentino"
+  ];
+  const availableBrands = new Set(products.map((product) => product.brand));
+  const preferred = preferredBrands.filter((brand) => availableBrands.has(brand));
+  const preferredSet = new Set(preferred);
+  const brands = [
+    ...preferred,
+    ...[...availableBrands].filter((brand) => !preferredSet.has(brand)).sort()
+  ];
+  const occasionOrder = ["casual", "oficina", "noche", "verano", "elegante"];
+  const occasionCollections = occasionOrder
+    .map((slug) => collections.find((collection) => collection.slug === slug))
+    .filter((collection): collection is NonNullable<typeof collection> => Boolean(collection));
 
   const featured = [
+    ...pickFeatured(products.filter((product) => product.gender === "men"), "clothing", 2),
+    ...pickFeatured(products.filter((product) => product.gender === "men"), "shoes", 2),
     ...pickFeatured(products, "watch", 2),
-    ...pickFeatured(products, "perfume", 2),
-    ...pickFeatured(products, "clothing", 2),
-    ...pickFeatured(products, "shoes", 2)
-  ].slice(0, 8);
+    ...pickFeatured(products, "perfume", 2)
+  ];
 
   return (
     <div>
-      {/* HERO — una sola imagen elegante */}
-      <section className="relative h-[92vh] min-h-[560px] w-full overflow-hidden">
-        {/* Imagen editorial */}
-        <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2400&q=90"
-            alt="Editorial Maison Privée"
-            className="slow-zoom h-full w-full object-cover object-[50%_30%]"
-          />
-        </div>
-        {/* Veladuras para legibilidad y elegancia */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/25 to-black/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/45 to-transparent" />
-
-        {/* Contenido centrado vertical, alineado a la izquierda */}
-        <div className="container-shell relative flex h-full flex-col justify-center">
-          <div className="max-w-2xl text-white">
-            <p className="fade-up text-[11px] uppercase tracking-luxe text-white/80">
-              Maison Privée · Quiet Luxury · Lima
-            </p>
-            <div className="fade-up fade-up-2 rule-gold mt-5" />
-            <h1 className="fade-up fade-up-2 mt-5 font-serif text-[13vw] leading-[0.95] sm:text-7xl lg:text-8xl">
-              El lujo que<br />no necesita gritar.
+      <section className="relative overflow-hidden border-b border-line bg-surface2 py-12 sm:py-20 lg:py-24">
+        <div className="pointer-events-none absolute -left-24 top-8 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-white/40 blur-3xl dark:bg-white/5" />
+        <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
+          <div className="max-w-2xl">
+            <p className="eyebrow fade-up">Maison Privée · Curaduría personal</p>
+            <h1 className="fade-up fade-up-2 mt-5 font-serif text-5xl leading-[0.98] text-content sm:text-7xl lg:text-[5.5rem]">
+              Encontrar tu próxima pieza debería ser simple.
             </h1>
-            <p className="fade-up fade-up-3 mt-6 max-w-md text-base leading-relaxed text-white/85">
-              Relojes, moda y perfumería de diseñador, seleccionados por outfit y estilo — no por
-              categoría. Piezas que hablan bajo, pero se recuerdan.
+            <p className="fade-up fade-up-3 mt-6 max-w-xl text-lg leading-relaxed text-muted sm:text-xl">
+              Dinos para quién buscas, la ocasión y si tienes una marca favorita. Nosotros reducimos
+              el catálogo a una selección clara de ropa, calzado, relojes y perfumes.
             </p>
-            <div className="fade-up fade-up-4 mt-9 flex flex-wrap gap-3">
-              <Link
-                href="/coleccion/lujo-silencioso"
-                className="rounded-editorial bg-white px-7 py-3.5 text-[12px] uppercase tracking-[0.18em] text-neutral-900 transition duration-200 hover:bg-white/90 active:scale-[0.98]"
-              >
-                Descubrir Lujo Silencioso
-              </Link>
-              <Link
-                href="/tienda"
-                className="rounded-editorial border border-white/60 px-7 py-3.5 text-[12px] uppercase tracking-[0.18em] text-white backdrop-blur-sm transition duration-200 hover:bg-white/10 active:scale-[0.98]"
-              >
-                Ver catálogo
-              </Link>
+            <div className="fade-up fade-up-4 mt-8 flex flex-wrap gap-3">
+              <Link href="/tienda?gender=men" className="btn-ghost">Hombre</Link>
+              <Link href="/tienda?gender=women" className="btn-ghost">Mujer</Link>
+              <Link href="/coleccion/lujo-silencioso" className="btn-ghost">Lujo silencioso</Link>
             </div>
           </div>
-        </div>
-
-        {/* Indicador de scroll */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70">
-          <div className="nudge flex flex-col items-center gap-1">
-            <span className="text-[10px] uppercase tracking-[0.2em]">Descubrir</span>
-            <span className="text-lg leading-none">↓</span>
+          <div className="fade-up fade-up-3">
+            <StyleConcierge brands={brands} />
           </div>
         </div>
       </section>
 
-      {/* COMPRAR POR TIPO */}
-      <section className="container-shell py-24">
+      <section className="container-shell py-16 sm:py-24">
         <Reveal>
-          <div className="mb-10 text-center">
-            <p className="eyebrow">Explora la casa</p>
-            <div className="rule-gold mx-auto mt-3" />
-            <h2 className="mt-4 font-serif text-3xl text-content sm:text-4xl">Comprar por tipo</h2>
-          </div>
-        </Reveal>
-        <Reveal delay={100}>
-          <TypeStrip />
-        </Reveal>
-      </section>
-
-      {/* COLECCIONES */}
-      <section className="container-shell pb-24 pt-4">
-        <Reveal>
-          <div className="mb-10 flex items-end justify-between">
+          <div className="mb-9 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
-              <p className="eyebrow">Compra por momento</p>
-              <div className="rule-gold mt-3" />
-              <h2 className="mt-4 font-serif text-4xl text-content sm:text-5xl">
-                Elige por outfit, no por categoría
-              </h2>
+              <p className="eyebrow">Ir directamente</p>
+              <h2 className="mt-3 font-serif text-4xl text-content sm:text-5xl">¿Qué estás buscando?</h2>
             </div>
-            <Link href="/tienda" className="link-underline hidden text-sm text-muted sm:block">
-              Ver todo el catálogo
+            <Link href="/tienda" className="text-base font-medium text-muted hover:text-content">
+              Ver todo el catálogo →
             </Link>
           </div>
         </Reveal>
-
-        <div className="mb-6">
-          <CollectionCard collection={hero} count={counts.get(hero.slug)} large />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {rest.map((c) => (
-            <CollectionCard key={c.slug} collection={c} count={counts.get(c.slug)} />
-          ))}
-        </div>
+        <Reveal delay={80}><TypeStrip /></Reveal>
       </section>
 
-      {/* DESTACADOS */}
-      <section className="bg-surface2 py-24">
+      <section className="border-y border-line bg-surface py-16 sm:py-24">
         <div className="container-shell">
           <Reveal>
-            <div className="mb-10">
-              <p className="eyebrow">Selección de la casa</p>
-              <div className="rule-gold mt-3" />
-              <h2 className="mt-4 font-serif text-4xl text-content sm:text-5xl">Piezas destacadas</h2>
-            </div>
+            <p className="eyebrow">Comprar por momento</p>
+            <h2 className="mt-3 font-serif text-4xl text-content sm:text-5xl">La ocasión primero</h2>
+            <p className="mt-3 max-w-2xl text-lg text-muted">
+              Una selección útil comienza por saber dónde y cómo la vas a usar.
+            </p>
           </Reveal>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {featured.map((p, i) => (
-              <Reveal key={p.id} delay={(i % 4) * 80}>
-                <ProductCard product={p} rate={exchange.rate} />
-              </Reveal>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {occasionCollections.map((collection) => (
+              <CollectionCard key={collection.slug} collection={collection} count={counts.get(collection.slug)} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* VALORES */}
-      <section className="container-shell py-16">
-        <div className="grid gap-8 border-y border-line py-10 sm:grid-cols-3">
-          {[
-            { t: "Piezas auténticas", d: "Relojes y perfumes de casas de diseñador, seleccionados uno a uno." },
-            { t: "Envío a todo el Perú", d: "Precios en dólares y soles ya calculados. Pago contra entrega en Lima." },
-            { t: "Lujo silencioso", d: "Curaduría por outfit y estilo, no por catálogo. Elegancia sin ruido." }
-          ].map((v) => (
-            <div key={v.t} className="text-center">
-              <div className="rule-gold mx-auto mb-4" />
-              <h3 className="font-serif text-xl text-content">{v.t}</h3>
-              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-muted">{v.d}</p>
-            </div>
+      <section className="container-shell py-16 sm:py-24">
+        <Reveal>
+          <p className="eyebrow">Selección de la casa</p>
+          <h2 className="mt-3 font-serif text-4xl text-content sm:text-5xl">Piezas para empezar</h2>
+        </Reveal>
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((product, index) => (
+            <Reveal key={product.id} delay={(index % 4) * 70}>
+              <ProductCard product={product} rate={exchange.rate} />
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* FRANJA MARCAS */}
-      <section className="container-shell pb-16">
-        <p className="eyebrow mb-6 text-center">Marcas en la casa</p>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 font-serif text-xl text-muted">
-          {["Xerjoff", "Creed", "Seiko", "Tissot", "Saint Laurent", "Valentino", "Dior", "Armani", "Versace", "Ferragamo", "Jimmy Choo", "Balmain"].map(
-            (b) => (
-              <span key={b} className="transition-colors hover:text-accent">{b}</span>
-            )
-          )}
+      <section className="container-shell pb-20">
+        <div className="grid gap-5 rounded-[28px] border border-line bg-surface2 p-6 sm:grid-cols-3 sm:p-10">
+          {[
+            ["Producto visible", "Galerías amplias y vistas claras para decidir con seguridad."],
+            ["Selección útil", "Recomendaciones coherentes con género, ocasión y categoría."],
+            ["Compra sencilla", "Precios en dólares y soles, con atención directa por WhatsApp."]
+          ].map(([title, description]) => (
+            <div key={title} className="rounded-2xl bg-surface p-5">
+              <h3 className="font-serif text-2xl text-content">{title}</h3>
+              <p className="mt-2 text-base leading-relaxed text-muted">{description}</p>
+            </div>
+          ))}
         </div>
       </section>
     </div>
