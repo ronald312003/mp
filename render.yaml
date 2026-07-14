@@ -11,7 +11,9 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm run start
+    # Sincroniza schema + seed antes de levantar Next. Es no destructivo:
+    # conserva productos de admin y price_override_usd.
+    startCommand: npm run start:render
     autoDeploy: true
     envVars:
       - key: NODE_VERSION

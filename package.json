@@ -8,6 +8,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:render": "npm run db:push && next start",
     "lint": "next lint",
     "scrape": "node scripts/build-seed.mjs",
     "scrape:jomashop": "node scripts/scrape-jomashop.mjs",

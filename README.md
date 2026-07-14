@@ -208,13 +208,15 @@ git push -u origin main
 1. **New +** → **Web Service** → conecta el repo.
 2. Configura:
    - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm run start`
+   - **Start Command:** `npm run start:render`
    - **Environment:** Node
 3. Agrega las variables de entorno del punto 4.
 4. **Create Web Service**.
 
-Render asigna el puerto por `PORT`; `next start` lo respeta automáticamente.
-La app leerá los productos desde Neon; si la BD falla, cae al catálogo horneado.
+`start:render` aplica automáticamente `db/schema.sql` + `db/seed.sql` antes de
+levantar Next, por lo que no requiere Render Shell. La sincronización conserva
+productos creados en `/admin` y precios override. Render asigna el puerto por
+`PORT`; `next start` lo respeta automáticamente.
 
 ### Tipo de cambio automático (opcional)
 Para refrescar el dólar a diario sin re-desplegar, crea en Render un **Cron Job**
