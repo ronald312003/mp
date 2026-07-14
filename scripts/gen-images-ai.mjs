@@ -63,33 +63,45 @@ export async function generateAiImages(products, cacheDir, limit = 40) {
   const cachePath = resolve(cacheDir, "ai-images.json");
   const cache = loadJson(cachePath);
 
-  // Prioridad: relojes y ropa (lo que más pidió el usuario), luego el resto.
-  const order = { watch: 0, clothing: 1, shoes: 2, perfume: 3 };
+  // Adjuntar primero todo lo ya generado en corridas anteriores.
+  for (const p of products) {
+    const saved = Array.isArray(cache[p.id]) ? cache[p.id] : typeof cache[p.id] === "string" ? [cache[p.id]] : [];
+    p.images = [...new Set([p.imageUrl, ...(p.images || []), ...saved].filter(Boolean))];
+  }
+
+  // Gemini es el último respaldo: solo trabaja galerías que siguen con menos
+  // de tres vistas después de consultar las fuentes oficiales y la web.
+  const order = { clothing: 0, shoes: 1, watch: 2, perfume: 3 };
   const targets = products
-    .filter((p) => cache[p.id] === undefined && p.imageUrl && PROMPTS[p.type])
+    .filter((p) => (p.images?.length || 0) < 3 && p.imageUrl && PROMPTS[p.type])
     .sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
 
   let done = 0, failed = 0;
   for (const p of targets) {
     if (done >= limit) break;
+    const saved = Array.isArray(cache[p.id]) ? cache[p.id] : typeof cache[p.id] === "string" ? [cache[p.id]] : [];
     try {
       const ref = await fetchAsBase64(p.imageUrl);
-      const img = await geminiImage(PROMPTS[p.type](p), ref);
-      if (!img) throw new Error("sin imagen en la respuesta");
-      const ext = img.mime.includes("png") ? "png" : "jpg";
-      const rel = `/generated/${p.id}-ai.${ext}`;
-      writeFileSync(resolve(ROOT, "public" + rel), img.buffer);
-      cache[p.id] = rel;
-      done++;
-      process.stdout.write(`\r  · generadas: ${done}/${Math.min(limit, targets.length)}   `);
+      while ((p.images?.length || 0) < 3 && done < limit) {
+        const variant = saved.length + 1;
+        const prompt = `${PROMPTS[p.type](p)} Create a clearly different camera angle and composition from the reference and previous views. Variant ${variant}.`;
+        const img = await geminiImage(prompt, ref);
+        if (!img) throw new Error("sin imagen en la respuesta");
+        const ext = img.mime.includes("png") ? "png" : "jpg";
+        const rel = `/generated/${p.id}-ai-${variant}.${ext}`;
+        writeFileSync(resolve(ROOT, "public" + rel), img.buffer);
+        saved.push(rel);
+        p.images = [...new Set([...(p.images || []), rel])];
+        cache[p.id] = saved;
+        done++;
+        saveJson(cachePath, cache);
+        process.stdout.write(`\r  · generadas: ${done}/${limit}   `);
+      }
     } catch (e) {
-      cache[p.id] = null; // no reintentar en esta pasada
+      cache[p.id] = saved;
       failed++;
       if (failed <= 3) console.warn(`\n  ! ${p.id}: ${e.message}`);
-      if (failed >= 8 && done === 0) {
-        console.warn("\n  ! demasiados fallos seguidos: se detiene la generación");
-        break;
-      }
+      if (failed >= 8 && done === 0) break;
     }
     saveJson(cachePath, cache);
   }
@@ -98,8 +110,8 @@ export async function generateAiImages(products, cacheDir, limit = 40) {
   // Añadir a la galería (los ya generados en corridas anteriores también).
   let attached = 0;
   for (const p of products) {
-    const rel = cache[p.id];
-    if (rel && existsSync(resolve(ROOT, "public" + rel))) {
+    const saved = Array.isArray(cache[p.id]) ? cache[p.id] : typeof cache[p.id] === "string" ? [cache[p.id]] : [];
+    for (const rel of saved) if (rel && existsSync(resolve(ROOT, "public" + rel))) {
       p.images = p.images || (p.imageUrl ? [p.imageUrl] : []);
       if (!p.images.includes(rel)) p.images.push(rel);
       attached++;

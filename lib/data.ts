@@ -21,7 +21,13 @@ export async function getCatalog(): Promise<Catalog> {
 
   const sql = getSql();
   if (!sql) {
-    const data = fallbackCatalog as unknown as Catalog;
+    const fallback = fallbackCatalog as unknown as Catalog;
+    const data = {
+      ...fallback,
+      products: fallback.products.filter(
+        (p) => !(p.type === "perfume" && p.basePriceUsd < 120)
+      )
+    };
     cache = { at: Date.now(), data };
     return data;
   }
@@ -41,6 +47,7 @@ export async function getCatalog(): Promise<Catalog> {
                    ARRAY[]::text[]
                  ) AS collections
           FROM products p
+          WHERE NOT (p.type = 'perfume' AND p.base_price_usd < 120)
           ORDER BY p.final_price_usd ASC`,
       sql`SELECT key, value FROM settings`
     ]);
@@ -101,7 +108,13 @@ export async function getCatalog(): Promise<Catalog> {
     return data;
   } catch (err) {
     console.error("[data] fallo al leer Neon, usando catálogo horneado:", err);
-    const data = fallbackCatalog as unknown as Catalog;
+    const fallback = fallbackCatalog as unknown as Catalog;
+    const data = {
+      ...fallback,
+      products: fallback.products.filter(
+        (p) => !(p.type === "perfume" && p.basePriceUsd < 120)
+      )
+    };
     cache = { at: Date.now(), data };
     return data;
   }

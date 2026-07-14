@@ -7,6 +7,7 @@
 //    (o define DATABASE_URL en .env.local y córrelo con dotenv)
 // ============================================================
 
+import "./load-env.mjs";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,8 +32,24 @@ async function main() {
   console.log("→ Aplicando schema.sql…");
   await client.query(schema);
 
+  const reset = process.argv.includes("--reset");
+  if (reset) {
+    console.log("→ Vaciando catálogo anterior…");
+  }
+
   console.log("→ Aplicando seed.sql…");
-  await client.query(seed);
+  if (reset) {
+    // seed.sql ya trae BEGIN/COMMIT. Los retiramos para envolver TRUNCATE +
+    // seed en una sola transacción: si algo falla, el catálogo anterior vuelve.
+    const seedBody = seed
+      .replace(/(^|\r?\n)BEGIN;\s*(\r?\n)/, "$1")
+      .replace(/\r?\nCOMMIT;\s*$/, "\n");
+    await client.query(
+      `BEGIN;\nTRUNCATE TABLE product_collections, products RESTART IDENTITY CASCADE;\n${seedBody}\nCOMMIT;`
+    );
+  } else {
+    await client.query(seed);
+  }
 
   const { rows } = await client.query("SELECT count(*)::int AS n FROM products");
   console.log(`✓ Listo. Productos en la base: ${rows[0].n}`);

@@ -16,7 +16,8 @@
     "images:ai": "node scripts/gen-images-ai.mjs",
     "recos": "node scripts/gen-recos.mjs",
     "db:sql": "node scripts/gen-sql.mjs",
-    "db:push": "node scripts/db-apply.mjs"
+    "db:push": "node scripts/db-apply.mjs",
+    "db:reset": "node scripts/db-apply.mjs --reset"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",

@@ -36,12 +36,33 @@ const matchGender = (a, b) => a === b || a === "unisex" || b === "unisex";
 // Candidatos de OTRAS categorías: comparten colección y género compatible.
 function candidatesFor(product, all, max = 22) {
   const set = new Set(product.collections);
-  return all
+  const scored = all
     .filter((p) => p.id !== product.id && p.type !== product.type && matchGender(p.gender, product.gender))
-    .map((p) => ({ p, overlap: p.collections.filter((c) => set.has(c)).length }))
-    .sort((a, b) => b.overlap - a.overlap)
-    .slice(0, max)
-    .map(({ p }) => p);
+    .map((p) => ({
+      p,
+      overlap: p.collections.filter((c) => set.has(c)).length,
+      exactGender: p.gender === product.gender ? 1 : 0,
+      priceDistance: Math.abs(Math.log((p.finalPriceUsd || 1) / (product.finalPriceUsd || 1)))
+    }))
+    .sort(
+      (a, b) =>
+        b.overlap - a.overlap ||
+        b.exactGender - a.exactGender ||
+        a.priceDistance - b.priceDistance
+    );
+
+  // Evita que una categoría numerosa monopolice los candidatos de Gemini.
+  const preferred = {
+    clothing: ["shoes", "watch", "perfume"],
+    shoes: ["clothing", "watch", "perfume"],
+    watch: ["clothing", "shoes", "perfume"],
+    perfume: ["clothing", "shoes", "watch"]
+  }[product.type] || ["clothing", "shoes", "watch", "perfume"];
+  const balanced = [];
+  for (const type of preferred) {
+    balanced.push(...scored.filter(({ p }) => p.type === type).slice(0, Math.ceil(max / preferred.length)));
+  }
+  return balanced.slice(0, max).map(({ p }) => p);
 }
 
 const line = (p) =>
@@ -69,10 +90,8 @@ ${blocks}`;
 
 /** Genera recomendaciones para products (muta recoIds/recoNote/recoContext). */
 export async function generateRecos(products, cacheDir) {
-  if (!geminiEnabled()) {
-    console.log("  · (sin GEMINI_API_KEY: se usará el emparejado por reglas)");
-    return;
-  }
+  const aiEnabled = geminiEnabled();
+  if (!aiEnabled) console.log("  · sin Gemini: recomendaciones profesionales por reglas");
   mkdirSync(cacheDir, { recursive: true });
   const cachePath = resolve(cacheDir, "recos.json");
   const cache = loadJson(cachePath);
@@ -109,7 +128,7 @@ export async function generateRecos(products, cacheDir) {
     }
   }
 
-  const pending = products.filter((p) => !cache[p.id]);
+  const pending = aiEnabled ? products.filter((p) => !cache[p.id]) : [];
   console.log(`  · pendientes: ${pending.length}/${products.length}`);
 
   const BATCH = 8;
@@ -148,12 +167,18 @@ export async function generateRecos(products, cacheDir) {
   let applied = 0;
   for (const p of products) {
     const r = cache[p.id];
-    if (!r) continue;
-    const picks = validPicks(p, r.picks || []);
+    const candidates = candidatesFor(p, products);
+    const picks = validPicks(p, r?.picks || []);
+    for (const candidate of candidates) {
+      if (picks.length >= 3) break;
+      if (picks.includes(candidate.id)) continue;
+      if (picks.some((id) => byId.get(id)?.type === candidate.type)) continue;
+      picks.push(candidate.id);
+    }
     if (!picks.length) continue;
     p.recoIds = picks;
-    p.recoNote = r.note || null;
-    p.recoContext = r.context || null;
+    p.recoNote = r?.note || "Una selección equilibrada por estilo, ocasión, nivel de precio y género para completar el conjunto.";
+    p.recoContext = r?.context || p.collections[0] || "elegante";
     applied++;
   }
   console.log(`  · recomendaciones aplicadas: ${applied}/${products.length}`);
@@ -162,13 +187,9 @@ export async function generateRecos(products, cacheDir) {
 // ---------- ejecutable directo ----------
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   (async () => {
-    if (!geminiEnabled()) {
-      console.error("Falta GEMINI_API_KEY en el entorno.");
-      process.exit(1);
-    }
     const catPath = resolve(ROOT, "data/catalog.json");
     const catalog = JSON.parse(readFileSync(catPath, "utf8"));
-    console.log("→ Recomendaciones con Gemini…");
+    console.log("→ Generando recomendaciones del catálogo…");
     await generateRecos(catalog.products, resolve(ROOT, "scripts/.cache"));
     writeFileSync(catPath, JSON.stringify(catalog, null, 2), "utf8");
     console.log("✓ data/catalog.json");
