@@ -12,6 +12,8 @@
 const sqlStr = (v) =>
   v === null || v === undefined ? "NULL" : `'${String(v).replace(/'/g, "''")}'`;
 const sqlNum = (v) => (v === null || v === undefined ? "NULL" : Number(v));
+const sqlArr = (a) =>
+  a && a.length ? `ARRAY[${a.map(sqlStr).join(", ")}]::text[]` : "NULL";
 
 export function buildSeedSql(catalog) {
   const L = [];
@@ -71,14 +73,16 @@ export function buildSeedSql(catalog) {
   L.push("-- 2) Insertar / actualizar productos scrapeados (conserva el override manual)");
   for (const p of catalog.products) {
     L.push(
-      `INSERT INTO products(id, source, source_id, name, brand, type, gender, description, image_url, source_url, base_price_usd, final_price_usd, styling_note, inspiration_image) VALUES (` +
+      `INSERT INTO products(id, source, source_id, name, brand, type, gender, description, image_url, images, source_url, base_price_usd, final_price_usd, styling_note, inspiration_image, reco_ids, reco_note, reco_context) VALUES (` +
         `${sqlStr(p.id)}, ${sqlStr(p.source)}, ${sqlStr(p.sourceId)}, ${sqlStr(p.name)}, ${sqlStr(p.brand)}, ` +
-        `${sqlStr(p.type)}, ${sqlStr(p.gender)}, ${sqlStr(p.description)}, ${sqlStr(p.imageUrl)}, ${sqlStr(p.sourceUrl)}, ` +
-        `${sqlNum(p.basePriceUsd)}, ${sqlNum(p.finalPriceUsd)}, ${sqlStr(p.stylingNote)}, ${sqlStr(p.inspirationImage)}) ` +
+        `${sqlStr(p.type)}, ${sqlStr(p.gender)}, ${sqlStr(p.description)}, ${sqlStr(p.imageUrl)}, ${sqlArr(p.images)}, ${sqlStr(p.sourceUrl)}, ` +
+        `${sqlNum(p.basePriceUsd)}, ${sqlNum(p.finalPriceUsd)}, ${sqlStr(p.stylingNote)}, ${sqlStr(p.inspirationImage)}, ` +
+        `${sqlArr(p.recoIds)}, ${sqlStr(p.recoNote)}, ${sqlStr(p.recoContext)}) ` +
         `ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, brand=EXCLUDED.brand, type=EXCLUDED.type, ` +
-        `gender=EXCLUDED.gender, description=EXCLUDED.description, image_url=EXCLUDED.image_url, ` +
+        `gender=EXCLUDED.gender, description=EXCLUDED.description, image_url=EXCLUDED.image_url, images=EXCLUDED.images, ` +
         `source_url=EXCLUDED.source_url, base_price_usd=EXCLUDED.base_price_usd, ` +
-        `final_price_usd=EXCLUDED.final_price_usd, styling_note=EXCLUDED.styling_note, inspiration_image=EXCLUDED.inspiration_image;`
+        `final_price_usd=EXCLUDED.final_price_usd, styling_note=EXCLUDED.styling_note, inspiration_image=EXCLUDED.inspiration_image, ` +
+        `reco_ids=EXCLUDED.reco_ids, reco_note=EXCLUDED.reco_note, reco_context=EXCLUDED.reco_context;`
     );
   }
   L.push("");

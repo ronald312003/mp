@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { getCatalog, getComplements } from "@/lib/data";
 import PriceTag from "@/components/PriceTag";
 import ProductCard from "@/components/ProductCard";
+import ProductGallery from "@/components/ProductGallery";
 import Reveal from "@/components/Reveal";
 
 export const revalidate = 3600;
@@ -45,6 +46,18 @@ export default async function ProductPage({ params }: { params: { id: string } }
     .slice(0, 4);
   const complements = await getComplements(product, 3);
 
+  // Galería: rutas locales (/generated/…) directas; las remotas pasan por el
+  // proxy /api/img para no exponer el host de origen.
+  const gallerySrcs = (product.images?.length ? product.images : [product.imageUrl]).map(
+    (u, i) => (u.startsWith("/") ? u : `/api/img/${product.id}?i=${i}`)
+  );
+
+  // Ambiente de la recomendación (invierno, noche, oficina…): la colección
+  // elegida por Gemini; si no hay, la imagen de inspiración del producto.
+  const ctxCollection = collections.find((c) => c.slug === product.recoContext);
+  const moodImage = ctxCollection?.heroImage ?? product.inspirationImage ?? null;
+  const moodTitle = ctxCollection?.title ?? "Inspiración";
+
   return (
     <div className="container-shell py-8">
       <nav className="mb-6 text-xs text-muted">
@@ -58,17 +71,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2">
-        {/* Imagen */}
-        <div className="relative aspect-square overflow-hidden rounded-md bg-surface ring-1 ring-line">
-          <Image
-            src={`/api/img/${product.id}`}
-            alt={`${product.brand} ${product.name}`}
-            fill
-            sizes="(max-width:1024px) 100vw, 50vw"
-            className="object-contain p-8"
-            priority
-          />
-        </div>
+        {/* Galería con efecto 3D (varias vistas reales del producto) */}
+        <ProductGallery srcs={gallerySrcs} alt={`${product.brand} ${product.name}`} />
 
         {/* Detalle */}
         <div className="flex flex-col">
@@ -119,7 +123,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* COMPLETA EL LOOK — recomendación inteligente cross-categoría */}
+      {/* COMPLETA EL LOOK — selección de Gemini sobre nuestro catálogo */}
       {(complements.length > 0 || product.stylingNote) && (
         <Reveal as="section" className="mt-24">
           <div className="mb-8">
@@ -128,41 +132,52 @@ export default async function ProductPage({ params }: { params: { id: string } }
             <h2 className="mt-4 font-serif text-3xl text-content sm:text-4xl">Completa el look</h2>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
-            {/* Imagen de inspiración + porqué */}
-            <div className="overflow-hidden rounded-editorial ring-1 ring-line">
-              {product.inspirationImage && (
-                <div className="relative aspect-[4/3] bg-surface2">
-                  <Image
-                    src={product.inspirationImage}
-                    alt="Inspiración de estilo"
-                    fill
-                    sizes="(max-width:1024px) 100vw, 50vw"
-                    className="object-cover"
-                  />
-                  <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[10px] uppercase tracking-[0.16em] text-white backdrop-blur">
-                    Cómo quedaría
+          <div className="overflow-hidden rounded-editorial ring-1 ring-line">
+            {/* Ambiente de la recomendación (invierno, noche, oficina…) */}
+            {moodImage && (
+              <div className="relative h-56 sm:h-72">
+                <Image
+                  src={moodImage}
+                  alt={`Ambiente: ${moodTitle}`}
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                  <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
+                    Pensado para {moodTitle}
                   </span>
+                  {product.recoNote && (
+                    <p className="mt-3 max-w-3xl font-serif text-lg leading-snug text-white sm:text-xl">
+                      “{product.recoNote}”
+                    </p>
+                  )}
                 </div>
-              )}
-              {product.stylingNote && (
-                <div className="bg-surface p-5">
-                  <p className="text-[11px] uppercase tracking-luxe text-muted">El porqué</p>
-                  <p className="mt-2 text-[15px] leading-relaxed text-content">{product.stylingNote}</p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Complementos de otras categorías */}
-            <div>
+            <div className="bg-surface p-6 sm:p-8">
+              {!moodImage && product.recoNote && (
+                <p className="mb-6 max-w-3xl font-serif text-lg leading-snug text-content">
+                  “{product.recoNote}”
+                </p>
+              )}
               <p className="mb-4 text-sm text-muted">
-                Piezas de otras categorías que combinan con {product.brand}:
+                Piezas de nuestro catálogo elegidas para acompañar este {product.brand}:
               </p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {complements.map((p) => (
                   <ProductCard key={p.id} product={p} rate={exchange.rate} />
                 ))}
               </div>
+
+              {product.stylingNote && (
+                <div className="mt-6 border-t border-line pt-5">
+                  <p className="text-[11px] uppercase tracking-luxe text-muted">Cómo llevarlo</p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-content">{product.stylingNote}</p>
+                </div>
+              )}
             </div>
           </div>
         </Reveal>

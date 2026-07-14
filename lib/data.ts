@@ -31,9 +31,10 @@ export async function getCatalog(): Promise<Catalog> {
       sql`SELECT slug, title, subtitle, description, kind, hero_image
           FROM collections ORDER BY sort_order ASC, title ASC`,
       sql`SELECT p.id, p.source, p.source_id, p.name, p.brand, p.type, p.gender,
-                 p.description, p.image_url, p.source_url,
+                 p.description, p.image_url, p.images, p.source_url,
                  p.base_price_usd, p.final_price_usd, p.price_override_usd,
                  p.styling_note, p.inspiration_image,
+                 p.reco_ids, p.reco_note, p.reco_context,
                  COALESCE(
                    (SELECT array_agg(pc.collection_slug)
                     FROM product_collections pc WHERE pc.product_id = p.id),
@@ -75,7 +76,11 @@ export async function getCatalog(): Promise<Catalog> {
         priceOverrideUsd: override,
         collections: r.collections ?? [],
         stylingNote: r.styling_note ?? null,
-        inspirationImage: r.inspiration_image ?? null
+        inspirationImage: r.inspiration_image ?? null,
+        images: r.images ?? undefined,
+        recoIds: r.reco_ids ?? undefined,
+        recoNote: r.reco_note ?? null,
+        recoContext: r.reco_context ?? null
       };
     });
 
@@ -127,11 +132,21 @@ export async function getProductsByCollection(slug: string): Promise<Product[]> 
 }
 
 /**
- * Productos para "completar el look": de OTRAS categorías (tipos) que comparten
- * colecciones con el producto dado. Devuelve variedad de tipos, mejor match primero.
+ * Productos para "completar el look".
+ * 1º: la selección hecha por Gemini sobre el catálogo real (recoIds).
+ * 2º (respaldo): otras categorías que comparten colecciones con el producto.
  */
 export async function getComplements(product: Product, limit = 3): Promise<Product[]> {
   const all = (await getCatalog()).products;
+
+  if (product.recoIds?.length) {
+    const picks = product.recoIds
+      .map((id) => all.find((p) => p.id === id))
+      .filter((p): p is Product => Boolean(p))
+      .slice(0, limit);
+    if (picks.length) return picks;
+  }
+
   const set = new Set(product.collections);
   const scored = all
     .filter((p) => p.id !== product.id && p.type !== product.type)

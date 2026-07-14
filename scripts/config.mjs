@@ -37,6 +37,10 @@ export const PERFUME_PER_BRAND = 16;
 // Solo perfumes con tamaño MAYOR a 2 oz (frascos completos, no testers/mini).
 export const MIN_PERFUME_OZ = 2;
 
+// Solo perfumes con precio de COSTO desde 120 USD (pedido del usuario:
+// no publicar fragancias por debajo de ese costo).
+export const MIN_PERFUME_BASE_USD = 120;
+
 // Fragancias icónicas / más buscadas: se priorizan al inicio de cada marca
 // para que siempre aparezcan (p. ej. Erba Pura de Xerjoff).
 export const HERO_FRAGRANCES = [

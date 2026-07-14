@@ -11,6 +11,7 @@ import {
   PERFUME_PER_BRAND,
   PERFUME_BRANDS,
   MIN_PERFUME_OZ,
+  MIN_PERFUME_BASE_USD,
   HERO_FRAGRANCES
 } from "./config.mjs";
 
@@ -58,9 +59,17 @@ const ITEM_FIELDS = `
   items {
     name sku url_key stock_status
     image{url} small_image{url}
+    media_gallery{url}
     short_description{html}
     price_range{minimum_price{final_price{value currency}}}
   }`;
+
+// Todas las fotos reales del producto (galería), sin duplicados.
+function pickImages(item) {
+  const main = pickImage(item);
+  const urls = [main, ...(item?.media_gallery || []).map((g) => g?.url).filter(Boolean)];
+  return [...new Set(urls.filter(Boolean))].slice(0, 6);
+}
 
 async function fetchCategoryPage(categoryId, page, pageSize = 100) {
   const q = `{
@@ -90,6 +99,7 @@ function toProduct(item, { type, gender, brand }) {
     gender,
     description: item?.short_description?.html?.replace(/<[^>]+>/g, "").trim() || null,
     imageUrl: pickImage(item),
+    images: pickImages(item),
     sourceUrl: productUrl(item.url_key),
     basePriceUsd: price
   };
@@ -178,6 +188,7 @@ export async function scrapePerfumes() {
       for (const it of res.items) {
         const price = Number(it?.price_range?.minimum_price?.final_price?.value || 0);
         if (!price || price <= 0) continue;
+        if (price < MIN_PERFUME_BASE_USD) continue; // costo mínimo 120 USD
         if (!pickImage(it)) continue;
         if (!isFullBottle(it.name)) continue; // SOLO > 2 oz, frasco completo
         if (seen.has(it.sku)) continue;

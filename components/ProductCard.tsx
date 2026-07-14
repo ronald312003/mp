@@ -14,7 +14,7 @@ export default function ProductCard({ product, rate }: { product: Product; rate:
   return (
     <Link
       href={`/producto/${product.id}`}
-      className="group flex flex-col overflow-hidden rounded-editorial bg-surface ring-1 ring-line transition duration-300 hover:-translate-y-1 hover:shadow-lift hover:ring-accent/60"
+      className="group flex flex-col overflow-hidden rounded-editorial bg-surface ring-1 ring-line transition duration-300 hover:shadow-lift hover:ring-accent/60 hover:[transform:perspective(1000px)_rotateX(2deg)_rotateY(-2deg)_translateY(-5px)]"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-surface2">
         <Image

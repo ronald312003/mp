@@ -8,6 +8,7 @@
 //   6) Escribe data/catalog.json y db/seed.sql
 // ============================================================
 
+import "./load-env.mjs";
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,10 @@ import { getExchangeRate } from "../lib/exchange.mjs";
 import { searchProductImage } from "../lib/image-search.mjs";
 import { classifyAll, aiEnabled } from "../lib/ai-classify.mjs";
 import { buildSeedSql } from "./seed-sql.mjs";
+import { enrichImages } from "./enrich-images.mjs";
+import { generateRecos } from "./gen-recos.mjs";
+import { generateAiImages } from "./gen-images-ai.mjs";
+import { geminiEnabled } from "../lib/gemini.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -49,7 +54,11 @@ function enrich(base) {
     finalPriceUsd: finalUsd,
     collections,
     stylingNote: null,
-    inspirationImage: null
+    inspirationImage: null,
+    images: base.images && base.images.length ? base.images : base.imageUrl ? [base.imageUrl] : [],
+    recoIds: null,
+    recoNote: null,
+    recoContext: null
   };
 }
 
@@ -190,6 +199,23 @@ async function main() {
   // Imágenes de inspiración de estilo (una por colección+género, reutilizadas)
   console.log("→ Imágenes de inspiración de estilo…");
   await resolveInspiration(products, resolve(cacheDir, "inspiration.json"));
+
+  // Galería multi-imagen (Jomashop media_gallery / vistas TheOutnet / "en modelo")
+  console.log("→ Galerías de imágenes (varias vistas por producto)…");
+  await enrichImages(products, cacheDir);
+
+  // Recomendaciones "completa el look" con Gemini + imágenes editoriales AI
+  if (geminiEnabled()) {
+    console.log("→ Recomendaciones de estilo (Gemini)…");
+    await generateRecos(products, cacheDir);
+    const imgLimit = Number(process.env.GEMINI_IMG_LIMIT || 0);
+    if (imgLimit > 0) {
+      console.log(`→ Imágenes editoriales AI (límite ${imgLimit})…`);
+      await generateAiImages(products, cacheDir, imgLimit);
+    }
+  } else {
+    console.log("→ (sin GEMINI_API_KEY: recomendaciones por reglas)");
+  }
 
   const catalog = {
     generatedAt: new Date().toISOString(),

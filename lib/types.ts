@@ -18,6 +18,10 @@ export interface Product {
   collections: string[]; // slugs
   stylingNote?: string | null; // IA: cómo complementarlo / armar el look
   inspirationImage?: string | null; // imagen de referencia del estilo (cómo quedaría)
+  images?: string[]; // galería: varias fotos del producto (urls o rutas /generated/…)
+  recoIds?: string[]; // "completa el look" elegido por Gemini (ids del catálogo)
+  recoNote?: string | null; // explicación elegante de la recomendación
+  recoContext?: string | null; // slug de colección que ambienta la recomendación
 }
 
 export interface Collection {
