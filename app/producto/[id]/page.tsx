@@ -167,7 +167,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
           <div className="mt-6 border-y border-line py-6">
             <PriceTag usd={product.finalPriceUsd} rate={exchange.rate} size="lg" />
             <p className="mt-2 text-xs text-muted">
-              Precio en dólares y soles (1 USD ≈ S/ {exchange.rate.toFixed(2)}, venta Kambista + 0.10).
+              Tipo de cambio: 1 USD ≈ S/ {exchange.rate.toFixed(2)}
             </p>
           </div>
 

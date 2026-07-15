@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Footer({ rate, source }: { rate: number; source: string }) {
+export default function Footer({ rate }: { rate: number }) {
   return (
     <footer className="mt-24 border-t border-line bg-surface2">
       <div className="container-shell py-14">
@@ -27,9 +27,6 @@ export default function Footer({ rate, source }: { rate: number; source: string 
             <p className="eyebrow mb-4">Tipo de cambio</p>
             <p className="text-sm text-muted">
               1 USD ≈ <span className="text-content">S/ {rate.toFixed(2)}</span>
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              Basado en el valor de venta de Kambista {source === "kambista" ? "(en vivo)" : "(referencial)"} + 0.10.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import SmartImage from "./SmartImage";
 
 export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: string }) {
   const images = useMemo(() => [...new Set(srcs.filter(Boolean))], [srcs]);
@@ -41,7 +41,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
           className="absolute inset-0 z-10 cursor-zoom-in"
           aria-label="Ampliar imagen del producto"
         />
-        <Image
+        <SmartImage
           key={current}
           src={current}
           alt={`${alt}, vista ${idx + 1}`}
@@ -57,9 +57,11 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
           priority
         />
 
-        <span className="absolute left-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
-          {images.length > 1 ? `Vista ${idx + 1} de ${images.length}` : "Imagen verificada"}
-        </span>
+        {images.length > 1 && (
+          <span className="absolute left-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
+            Vista {idx + 1} de {images.length}
+          </span>
+        )}
         <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
           Ampliar
         </span>
@@ -100,7 +102,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
                 imageIndex === idx ? "ring-accent" : "ring-line opacity-70 hover:opacity-100"
               }`}
             >
-              <Image src={src} alt="" fill sizes="96px" className="object-contain p-1.5" />
+              <SmartImage src={src} alt="" fill sizes="96px" className="object-contain p-1.5" />
             </button>
           ))}
         </div>
@@ -108,7 +110,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
 
       {images.length === 1 && (
         <div className="mt-3 min-w-0 max-w-full overflow-hidden rounded-2xl border border-line bg-surface p-2 sm:flex sm:items-center sm:justify-between">
-          <p className="min-w-0 break-words px-2 pb-2 text-sm leading-snug text-muted sm:pb-0">Tres acercamientos de la misma foto verificada; nunca mezclamos otra variante.</p>
+          <p className="min-w-0 break-words px-2 pb-2 text-sm leading-snug text-muted sm:pb-0">Acércate a la pieza:</p>
           <div className="grid min-w-0 grid-cols-3 rounded-xl bg-surface2 p-1 sm:flex">
             {([
               ["full", "Completa"],
@@ -146,7 +148,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
             ×
           </button>
           <div className="relative h-full w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
-            <Image
+            <SmartImage
               key={`zoom-${current}`}
               src={current}
               alt={`${alt}, vista ampliada ${idx + 1}`}

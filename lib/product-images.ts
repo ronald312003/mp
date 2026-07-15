@@ -45,6 +45,7 @@ export function productImageSrc(
 ) {
   const images = canonicalProductImages(product);
   const source = images[index] || images[0] || "";
-  if (!source || source.startsWith("/")) return source;
+  if (!source) return "/placeholder-piece.svg";
+  if (source.startsWith("/")) return source;
   return `/api/img/${product.id}?i=${index}&v=${opaqueVersion(source)}`;
 }

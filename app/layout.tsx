@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CartProvider>
           <Header rate={exchange.rate} />
           <main className="min-h-screen">{children}</main>
-          <Footer rate={exchange.rate} source={exchange.source} />
+          <Footer rate={exchange.rate} />
         </CartProvider>
       </body>
     </html>

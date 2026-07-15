@@ -26,15 +26,11 @@ export default function WatchShowcase3D({
     <section className="mt-24">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="eyebrow">Archivo oficial · {media.model}</p>
+          <p className="eyebrow">Galería oficial</p>
           <div className="rule-gold mt-3" />
           <h2 className="mt-4 font-serif text-4xl text-content sm:text-5xl">
-            El reloj, sin simulaciones
+            El reloj, de cerca
           </h2>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted">
-            Fotografías y material técnico publicados por {media.brand}, vinculados a esta
-            referencia exacta. Ninguna vista pertenece a otro modelo.
-          </p>
         </div>
         <a
           href={media.officialUrl}
@@ -94,8 +90,7 @@ export default function WatchShowcase3D({
               </div>
             </div>
             <p className="mt-8 text-sm leading-relaxed text-white/60">
-              Verificación por MPN/SKU: <strong className="text-white">{media.model}</strong>.
-              Los videos solo aparecen cuando el fabricante los asocia a esta misma referencia.
+              Imágenes y video oficiales de {media.brand}.
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import SmartImage from "./SmartImage";
 import { useCart } from "./CartProvider";
 
 const money = (value: number, currency: "USD" | "PEN") =>
@@ -35,7 +35,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
           {items.map((item) => (
             <article key={item.id} className="grid grid-cols-[104px_1fr] gap-4 rounded-[24px] border border-line bg-surface p-4 sm:grid-cols-[140px_1fr] sm:p-5">
               <Link href={`/producto/${item.id}`} className="relative aspect-square overflow-hidden rounded-2xl bg-surface2">
-                <Image src={item.imageSrc} alt={`${item.brand} ${item.name}`} fill sizes="140px" className="object-contain p-3" />
+                <SmartImage src={item.imageSrc} alt={`${item.brand} ${item.name}`} fill sizes="140px" className="object-contain p-3" />
               </Link>
               <div className="flex min-w-0 flex-col sm:flex-row sm:justify-between sm:gap-5">
                 <div>
@@ -67,6 +67,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
             <span className="text-right"><strong className="block font-serif text-3xl text-content">{money(totalUsd, "USD")}</strong><small className="text-muted">{money(totalUsd * rate, "PEN")}</small></span>
           </div>
           <Link href="/checkout" className="btn-accent w-full">Continuar al pedido</Link>
+          <Link href="/tienda" className="btn-ghost mt-3 w-full">Seguir explorando</Link>
           <p className="mt-4 text-center text-xs leading-relaxed text-muted">Completarás tus datos, recibirás el PDF y confirmarás por WhatsApp.</p>
         </aside>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import SmartImage from "./SmartImage";
 import { useCart } from "./CartProvider";
 
 type Receipt = {
@@ -143,17 +144,13 @@ export default function CheckoutForm({ rate }: { rate: number }) {
 
   return (
     <div className="container-shell py-12 sm:py-16">
-      <div className="mb-8 flex items-center justify-between text-sm">
-        <div className="flex items-center gap-2 text-muted">
-          <span>Bolsa</span>
-          <span className="text-line">›</span>
-        </div>
-        <div className="flex items-center gap-2 text-content font-medium">
-          <span>Datos de entrega</span>
-          <span className="text-line">›</span>
-        </div>
-        <span className="text-muted">Confirmación</span>
-      </div>
+      <nav aria-label="Progreso del pedido" className="mb-8 flex items-center gap-2 text-sm">
+        <Link href="/carrito" className="text-muted transition hover:text-content">Bolsa</Link>
+        <span className="text-muted/50">›</span>
+        <span className="font-medium text-content">Datos de entrega</span>
+        <span className="text-muted/50">›</span>
+        <span className="text-muted">Confirmación por WhatsApp</span>
+      </nav>
       <p className="eyebrow">Confirmación de pedido</p>
       <h1 className="mt-3 max-w-3xl font-serif text-[2.6rem] leading-none text-content sm:text-6xl">Completa tu información de entrega.</h1>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Revisaremos tu pedido, confirmaremos el envío por WhatsApp y te enviaremos un PDF con el resumen completo.</p>
@@ -203,7 +200,7 @@ export default function CheckoutForm({ rate }: { rate: number }) {
             {items.map((item) => (
               <div key={item.id} className="flex gap-3 rounded-lg bg-surface2 p-3">
                 <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-bg">
-                  <img src={item.imageSrc} alt={`${item.brand} ${item.name}`} className="h-full w-full object-contain p-1.5" />
+                  <SmartImage src={item.imageSrc} alt={`${item.brand} ${item.name}`} fill sizes="64px" className="object-contain p-1.5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted uppercase tracking-wide">{item.brand}</p>

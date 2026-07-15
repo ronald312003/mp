@@ -1,8 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { productImageSrc } from "@/lib/product-images";
 import PriceTag from "./PriceTag";
+import SmartImage from "./SmartImage";
 
 export type ProductCardData = Pick<
   Product,
@@ -23,7 +23,7 @@ export default function ProductCard({ product, rate }: { product: ProductCardDat
       className="group flex flex-col overflow-hidden rounded-editorial bg-surface ring-1 ring-line transition duration-300 hover:-translate-y-1 hover:shadow-lift hover:ring-accent/60"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-surface2">
-        <Image
+        <SmartImage
           src={productImageSrc(product)}
           alt={`${product.brand} ${product.name}`}
           fill

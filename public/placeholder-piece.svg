@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" role="img" aria-label="Imagen no disponible">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f8f1e8"/>
+      <stop offset="1" stop-color="#efe2d0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#bg)"/>
+  <circle cx="600" cy="750" r="190" fill="none" stroke="#c8a078" stroke-width="3" opacity="0.55"/>
+  <text x="600" y="778" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="88" letter-spacing="6" fill="#97704b" opacity="0.85">MP</text>
+</svg>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import SmartImage from "./SmartImage";
 import ProductCard, { type ProductCardData } from "./ProductCard";
 import type { StyleVisual } from "@/lib/style-visuals";
 
@@ -87,7 +87,7 @@ export default function RecoLook({
         <div className="flex flex-col border-b border-line p-6 lg:border-b-0 lg:border-r">
           <p className="text-xs uppercase tracking-luxe text-muted">Tu pieza</p>
           <div className="relative mt-3 min-h-[220px] flex-1 overflow-hidden rounded-md bg-surface2 ring-1 ring-line">
-            <Image src={mainSrc} alt={`${mainBrand} ${mainName}`} fill sizes="(max-width:1024px) 100vw, 25vw" className="object-contain p-6" />
+            <SmartImage src={mainSrc} alt={`${mainBrand} ${mainName}`} fill sizes="(max-width:1024px) 100vw, 25vw" className="object-contain p-6" />
           </div>
           <p className="mt-3 text-base text-content">
             <span className="eyebrow block">{mainBrand}</span>
@@ -111,7 +111,7 @@ export default function RecoLook({
                   const chip = (
                     <span className="group/vis flex items-center gap-3">
                       <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full ring-1 ring-line transition group-hover/vis:ring-accent">
-                        <Image src={v.src} alt={v.label} fill sizes="64px" className="object-cover" />
+                        <SmartImage src={v.src} alt={v.label} fill sizes="64px" className="object-cover" />
                       </span>
                       <span className="text-base font-medium text-content">{v.label}</span>
                     </span>
