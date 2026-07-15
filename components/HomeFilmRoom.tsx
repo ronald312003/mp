@@ -41,9 +41,7 @@ export default function HomeFilmRoom() {
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">Maison en movimiento</p>
             <h2 className="mt-4 max-w-md font-serif text-4xl leading-[0.98] sm:text-5xl">El diseño se entiende mejor cuando se mueve.</h2>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-white/60 sm:text-base">
-              Películas publicadas por las propias casas. Elige una historia y mírala sin salir de la selección.
-            </p>
+
           </div>
 
           <div className="no-scrollbar mt-8 flex min-w-0 max-w-full gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
