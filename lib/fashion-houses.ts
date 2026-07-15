@@ -15,6 +15,18 @@ export interface FashionHouse {
  */
 export const FASHION_HOUSES: FashionHouse[] = [
   {
+    name: "Christian Louboutin",
+    since: "1991",
+    origin: "París, Francia",
+    identity: "La suela roja como gesto de deseo",
+    history:
+      "Christian Louboutin abrió su primera boutique junto a la Galerie Véro-Dodat de París en 1991. La silueta del zapato y la suela escarlata convirtieron su firma en un código reconocible sin necesidad de logotipos.",
+    philosophy:
+      "El calzado altera la postura, el movimiento y la confianza. Artesanía, teatralidad y proporción se equilibran para que cada par tenga presencia propia.",
+    codes: ["Suela roja", "Curva", "Teatralidad"],
+    sourceUrl: "https://us.christianlouboutin.com/us_en/our-history"
+  },
+  {
     name: "Saint Laurent",
     since: "1961",
     origin: "París, Francia",

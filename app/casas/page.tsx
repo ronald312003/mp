@@ -5,6 +5,8 @@ import Reveal from "@/components/Reveal";
 import { getCatalog } from "@/lib/data";
 import { FASHION_HOUSES } from "@/lib/fashion-houses";
 import type { Product } from "@/lib/types";
+import { HOUSE_IMAGES } from "@/lib/house-images";
+import FashionHouseSpotlight from "@/components/FashionHouseSpotlight";
 
 export const revalidate = 3600;
 
@@ -44,7 +46,7 @@ export default async function FashionHousesPage() {
   const houses = FASHION_HOUSES.map((house) => {
     const pieces = products.filter((product) => product.brand === house.name);
     const types = [...new Set(pieces.map((product) => TYPE_LABELS[product.type] || product.type))];
-    return { ...house, pieces, types, featured: representative(pieces) };
+    return { ...house, pieces, types, featured: representative(pieces), visual: HOUSE_IMAGES[house.name] };
   }).filter((house) => house.pieces.length && house.featured);
 
   const pieceCount = houses.reduce((total, house) => total + house.pieces.length, 0);
@@ -91,7 +93,17 @@ export default async function FashionHousesPage() {
         </div>
       </section>
 
-      <section className="container-shell py-16 sm:py-24">
+      <FashionHouseSpotlight houses={houses.filter((house) => house.visual).map((house) => ({
+        name: house.name,
+        origin: house.origin,
+        since: house.since,
+        identity: house.identity,
+        imageUrl: house.visual.imageUrl,
+        imageAlt: house.visual.imageAlt,
+        anchor: houseId(house.name)
+      }))} />
+
+      <section className="container-shell pb-16 sm:pb-24">
         <div className="grid gap-6 xl:grid-cols-2">
           {houses.map((house, index) => (
             <Reveal key={house.name} delay={(index % 2) * 80}>
@@ -102,15 +114,20 @@ export default async function FashionHousesPage() {
                 <div className="grid min-h-full sm:grid-cols-[0.82fr_1.18fr]">
                   <div className="relative min-h-[330px] bg-surface2 sm:min-h-full">
                     <Image
-                      src={house.featured.imageUrl}
-                      alt={`${house.featured.brand} ${house.featured.name}`}
+                      src={house.visual?.imageUrl || house.featured.imageUrl}
+                      alt={house.visual?.imageAlt || `${house.featured.brand} ${house.featured.name}`}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1280px) 40vw, 24vw"
-                      className="object-contain p-7"
+                      className={`transition duration-1000 hover:scale-105 ${house.visual ? "object-cover" : "object-contain p-7"}`}
                     />
                     <span className="absolute left-4 top-4 rounded-full bg-bg/85 px-3 py-1.5 text-xs font-medium text-content backdrop-blur">
                       {house.pieces.length} piezas
                     </span>
+                    {house.visual && (
+                      <a href={house.visual.creditUrl} target="_blank" rel="noreferrer" className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-[10px] text-white/80 backdrop-blur hover:text-white">
+                        Foto: {house.visual.credit}
+                      </a>
+                    )}
                   </div>
 
                   <div className="flex flex-col p-6 sm:p-7">

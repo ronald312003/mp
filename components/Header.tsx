@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
+import CartIndicator from "./CartIndicator";
 
 const NAV = [
   { href: "/coleccion/lujo-silencioso", label: "Lujo Silencioso" },
@@ -37,6 +38,7 @@ export default function Header({ rate }: { rate: number }) {
               1 USD ≈ S/ {rate.toFixed(2)}
             </span>
             <ThemeToggle />
+            <CartIndicator />
             <Link
               href="/tienda"
               className="rounded-editorial border border-content px-4 py-2 text-sm font-semibold text-content transition hover:bg-inverse hover:text-inverse-fg"

@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import ProductCard from "./ProductCard";
-import type { Product } from "@/lib/types";
+import ProductCard, { type ProductCardData } from "./ProductCard";
 import type { StyleVisual } from "@/lib/style-visuals";
 
 export interface LookData {
@@ -13,7 +12,7 @@ export interface LookData {
   note: string | null;
   ctxTitle: string; // Invierno, Noche…
   ctxBg: string; // degradado del ambiente
-  products: Product[];
+  products: ProductCardData[];
   visuals: StyleVisual[];
 }
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getExchange } from "@/lib/data";
+import CartProvider from "@/components/CartProvider";
 
 // Serif editorial para titulares; Hanken Grotesk (sólida y legible) para UI/texto.
 const serif = Cormorant_Garamond({
@@ -41,9 +42,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <Header rate={exchange.rate} />
-        <main className="min-h-screen">{children}</main>
-        <Footer rate={exchange.rate} source={exchange.source} />
+        <CartProvider>
+          <Header rate={exchange.rate} />
+          <main className="min-h-screen">{children}</main>
+          <Footer rate={exchange.rate} source={exchange.source} />
+        </CartProvider>
       </body>
     </html>
   );

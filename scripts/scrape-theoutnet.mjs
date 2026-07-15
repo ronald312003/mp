@@ -89,6 +89,7 @@ function inferGender(text, fallback = "women") {
 
 // Estimación de precio base (USD) en rango outlet, según tipo/categoría/marca.
 const TIER = {
+  "Christian Louboutin": 1.35,
   "Saint Laurent": 1.25, Valentino: 1.2, "Alexander McQueen": 1.18, "Maison Margiela": 1.12,
   Balmain: 1.15, Versace: 1.1, "Dolce & Gabbana": 1.1, Ferragamo: 1.05, "Jimmy Choo": 1.05,
   "Ralph Lauren": 0.85
@@ -291,7 +292,7 @@ function loadMensSnapshot() {
     brand: item.brand,
     type: item.type,
     gender: "men",
-    description: `${item.brand} — ${item.name}. Selección masculina de diseñador de The Outnet.`,
+    description: `${item.brand} — ${item.name}. Selección masculina de diseñador para Maison Privée.`,
     imageUrl: item.imageUrl,
     images: item.images,
     sourceUrl: item.url,
@@ -388,7 +389,7 @@ async function scrapeMensCategory(kind, pages, limit, type) {
     brand: item.brand,
     type: item.type,
     gender: "men",
-    description: `${item.brand} — ${item.name}. Selección masculina de diseñador de The Outnet.`,
+    description: `${item.brand} — ${item.name}. Selección masculina de diseñador para Maison Privée.`,
     imageUrl: item.imageUrl,
     images: item.images,
     sourceUrl: item.url,

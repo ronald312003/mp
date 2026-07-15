@@ -14,6 +14,7 @@ import {
   MIN_PERFUME_BASE_USD,
   HERO_FRAGRANCES
 } from "./config.mjs";
+import { cleanProductName } from "../lib/product-name.mjs";
 
 const ENDPOINT = "https://www.jomashop.com/graphql";
 const UA =
@@ -93,7 +94,7 @@ function toProduct(item, { type, gender, brand }) {
   return {
     source: "jomashop",
     sourceId: item.sku,
-    name: item.name.trim(),
+    name: cleanProductName(item.name, type),
     brand,
     type,
     gender,

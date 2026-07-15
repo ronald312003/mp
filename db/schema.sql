@@ -77,3 +77,36 @@ CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+
+-- Pedidos iniciados desde el checkout. Se conserva una fotografía de nombre,
+-- precio y cantidad para que el comprobante siga siendo auditable si cambia el catálogo.
+CREATE TABLE IF NOT EXISTS orders (
+  id              TEXT PRIMARY KEY,
+  status          TEXT NOT NULL DEFAULT 'whatsapp_pending',
+  customer_name   TEXT NOT NULL,
+  customer_phone  TEXT NOT NULL,
+  customer_email  TEXT,
+  address         TEXT NOT NULL,
+  district        TEXT NOT NULL,
+  city            TEXT NOT NULL DEFAULT 'Lima',
+  reference       TEXT,
+  notes           TEXT,
+  exchange_rate   NUMERIC(10,4) NOT NULL,
+  total_usd       NUMERIC(12,2) NOT NULL,
+  total_pen       NUMERIC(12,2) NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS order_items (
+  order_id        TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  line_no         INT NOT NULL,
+  product_id      TEXT REFERENCES products(id) ON DELETE SET NULL,
+  product_name    TEXT NOT NULL,
+  brand           TEXT NOT NULL,
+  quantity        INT NOT NULL CHECK (quantity BETWEEN 1 AND 10),
+  unit_price_usd  NUMERIC(10,2) NOT NULL,
+  PRIMARY KEY (order_id, line_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(customer_phone);

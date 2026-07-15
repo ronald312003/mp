@@ -1,7 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
+import { productImageSrc } from "@/lib/product-images";
 import PriceTag from "./PriceTag";
+
+export type ProductCardData = Pick<
+  Product,
+  "id" | "name" | "brand" | "type" | "finalPriceUsd" | "imageUrl" | "images"
+>;
 
 const TYPE_LABEL: Record<string, string> = {
   watch: "Reloj",
@@ -10,7 +16,7 @@ const TYPE_LABEL: Record<string, string> = {
   shoes: "Calzado"
 };
 
-export default function ProductCard({ product, rate }: { product: Product; rate: number }) {
+export default function ProductCard({ product, rate }: { product: ProductCardData; rate: number }) {
   return (
     <Link
       href={`/producto/${product.id}`}
@@ -18,7 +24,7 @@ export default function ProductCard({ product, rate }: { product: Product; rate:
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-surface2">
         <Image
-          src={`/api/img/${product.id}`}
+          src={productImageSrc(product)}
           alt={`${product.brand} ${product.name}`}
           fill
           sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"

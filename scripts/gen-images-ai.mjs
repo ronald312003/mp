@@ -76,7 +76,7 @@ export async function generateAiImages(products, cacheDir, limit = 40) {
     .filter((p) => (p.images?.length || 0) < 3 && p.imageUrl && PROMPTS[p.type])
     .sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9));
 
-  let done = 0, failed = 0;
+  let done = 0, failed = 0, quotaBlocked = false;
   for (const p of targets) {
     if (done >= limit) break;
     const saved = Array.isArray(cache[p.id]) ? cache[p.id] : typeof cache[p.id] === "string" ? [cache[p.id]] : [];
@@ -100,8 +100,9 @@ export async function generateAiImages(products, cacheDir, limit = 40) {
     } catch (e) {
       cache[p.id] = saved;
       failed++;
+      if (e?.code === "GEMINI_IMAGE_QUOTA") quotaBlocked = true;
       if (failed <= 3) console.warn(`\n  ! ${p.id}: ${e.message}`);
-      if (failed >= 8 && done === 0) break;
+      if (quotaBlocked || (failed >= 8 && done === 0)) break;
     }
     saveJson(cachePath, cache);
   }

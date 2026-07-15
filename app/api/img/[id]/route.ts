@@ -1,4 +1,5 @@
 import { getProduct } from "@/lib/data";
+import { canonicalProductImages } from "@/lib/product-images";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 
   const idx = Number(new URL(req.url).searchParams.get("i") || 0);
-  const list = product.images?.length ? product.images : [product.imageUrl];
+  const list = canonicalProductImages(product);
   let target = list[Number.isFinite(idx) ? idx : 0] ?? product.imageUrl;
   if (!target || target.startsWith("/")) target = product.imageUrl; // locales no se proxean
 
@@ -45,7 +46,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         status: 200,
         headers: {
           "content-type": ct,
-          "cache-control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400"
+          "cache-control": "public, max-age=86400, s-maxage=31536000, immutable"
         }
       });
     } catch {

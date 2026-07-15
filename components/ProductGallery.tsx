@@ -7,6 +7,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
   const images = useMemo(() => [...new Set(srcs.filter(Boolean))], [srcs]);
   const [idx, setIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [detail, setDetail] = useState(false);
   const current = images[Math.min(idx, images.length - 1)] ?? images[0];
 
   const move = (delta: number) => {
@@ -46,7 +47,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
           alt={`${alt}, vista ${idx + 1}`}
           fill
           sizes="(max-width:1024px) 100vw, 50vw"
-          className="object-contain p-6 sm:p-10"
+          className={`object-contain p-6 transition-transform duration-700 sm:p-10 ${detail ? "scale-[1.65]" : "scale-100"}`}
           priority
         />
 
@@ -96,6 +97,16 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
               <Image src={src} alt="" fill sizes="96px" className="object-contain p-1.5" />
             </button>
           ))}
+        </div>
+      )}
+
+      {images.length === 1 && (
+        <div className="mt-3 flex items-center justify-between rounded-2xl border border-line bg-surface p-2">
+          <p className="pl-3 text-sm text-muted">Inspecciona la pieza sin mezclar otra variante.</p>
+          <div className="flex rounded-xl bg-surface2 p-1">
+            <button type="button" onClick={() => setDetail(false)} aria-pressed={!detail} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${!detail ? "bg-bg text-content shadow-soft" : "text-muted"}`}>Completa</button>
+            <button type="button" onClick={() => setDetail(true)} aria-pressed={detail} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${detail ? "bg-bg text-content shadow-soft" : "text-muted"}`}>Detalle</button>
+          </div>
         </div>
       )}
 

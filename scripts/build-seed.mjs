@@ -26,6 +26,8 @@ import { enrichImages } from "./enrich-images.mjs";
 import { generateRecos } from "./gen-recos.mjs";
 import { generateAiImages } from "./gen-images-ai.mjs";
 import { geminiEnabled } from "../lib/gemini.mjs";
+import { cleanProductName } from "../lib/product-name.mjs";
+import { enrichOfficialWatchMedia } from "./enrich-watch-media.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -43,7 +45,7 @@ function enrich(base) {
     id: slugId(base.source, base.sourceId),
     source: base.source,
     sourceId: String(base.sourceId),
-    name: base.name,
+    name: cleanProductName(base.name, base.type),
     brand: base.brand,
     type: base.type,
     gender: base.gender,
@@ -278,6 +280,10 @@ async function main() {
   // Galería multi-imagen (Jomashop media_gallery / vistas TheOutnet / "en modelo")
   console.log("→ Galerías de imágenes (varias vistas por producto)…");
   await enrichImages(products, cacheDir);
+
+  // Medios del fabricante, solo cuando la referencia/modelo coincide exactamente.
+  console.log("→ Medios oficiales de relojería (validación por modelo)…");
+  await enrichOfficialWatchMedia(products, cacheDir);
 
   // Siempre genera recomendaciones válidas. Gemini mejora la redacción cuando
   // está configurado; sin API se conserva el filtrado profesional por género,

@@ -16,7 +16,6 @@ import "./load-env.mjs";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { searchProductImages } from "../lib/image-search.mjs";
 import { buildSeedSql } from "./seed-sql.mjs";
 import { MIN_PERFUME_BASE_USD } from "./config.mjs";
 
@@ -106,7 +105,15 @@ export async function enrichImages(products, cacheDir) {
   let jomaMulti = 0;
   for (const p of joma) {
     const urls = gCache[p.sourceId] || [];
-    p.images = [...new Set([p.imageUrl, ...urls].filter(Boolean))].slice(0, MAX_IMAGES);
+    // Si una corrida antigua había sustituido la portada con una búsqueda
+    // abierta, vuelve a una vista del SKU servida por el CDN oficial.
+    if (!/\/\/cdn2\.jomashop\.com\//i.test(p.imageUrl || "") && urls[0]) {
+      p.imageUrl = urls[0];
+    }
+    const generated = (p.images || []).filter((url) =>
+      url.startsWith(`/generated/${p.id}-ai-`)
+    );
+    p.images = [...new Set([p.imageUrl, ...urls, ...generated].filter(Boolean))].slice(0, MAX_IMAGES);
     if (p.images.length > 1) jomaMulti++;
   }
   console.log(`  · Jomashop: ${jomaMulti}/${joma.length} con galería (2+ fotos)`);
@@ -132,50 +139,28 @@ export async function enrichImages(products, cacheDir) {
       if (probed % 25 === 0) saveJson(vCachePath, vCache);
     }
     const official = vCache[pn] || [];
+    const generated = (p.images || []).filter((url) =>
+      url.startsWith(`/generated/${p.id}-ai-`)
+    );
     const front = official.find((url) => url.includes(`/${pn}/F/`));
     if (front) p.imageUrl = front;
-    p.images = [...new Set([front, ...official, p.imageUrl].filter(Boolean))]
+    p.images = [...new Set([front, ...official, p.imageUrl, ...generated].filter(Boolean))]
       .slice(0, MAX_IMAGES);
   });
   saveJson(vCachePath, vCache);
   const tonMulti = ton.filter((p) => (p.images?.length || 0) > 1).length;
   console.log(`  · TheOutnet: ${tonMulti}/${ton.length} con galería (2+ fotos)`);
 
-  // 3) Productos con pocas vistas: completar con búsqueda exacta por modelo/SKU.
-  // La fuente oficial siempre permanece primero; la web es solo respaldo.
-  const mCachePath = resolve(cacheDir, "supplemental-images-v2.json");
-  const mCache = loadJson(mCachePath);
+  // 3) Nunca mezclar resultados de búsqueda abierta: una coincidencia textual
+  // puede ser otra variante o incluso otro producto. Las galerías cortas se
+  // completan después con medios oficiales validados o Gemini desde la foto base.
   const sparse = products.filter((p) => (p.images?.length || 0) < 3);
-  const intent = {
-    watch: "watch front back wrist case detail",
-    perfume: "perfume bottle box product detail",
-    clothing: "garment front back model wearing",
-    shoes: "shoes side sole on feet"
-  };
-  let added = 0;
-  for (const p of sparse) {
-    const key = p.id;
-    if (mCache[key] === undefined) {
-      const q = `${p.brand} ${p.name} ${p.sourceId || ""} ${intent[p.type] || "product detail"}`
-        .slice(0, 180);
-      mCache[key] = await searchProductImages(q, { limit: 3 });
-      saveJson(mCachePath, mCache);
-    }
-    const cached = Array.isArray(mCache[key]) ? mCache[key] : mCache[key] ? [mCache[key]] : [];
-    for (const url of cached) {
-      if (p.images.length >= MAX_IMAGES) break;
-      if (!p.images.includes(url)) {
-        p.images.push(url);
-        added++;
-      }
-    }
-  }
-  console.log(`  · Respaldo web: ${added} vistas adicionales para productos con galería corta`);
+  console.log(`  · Galerías pendientes de vista adicional verificada: ${sparse.length}`);
 
   // Garantía: todo producto tiene al menos [imageUrl]
   for (const p of products) {
     if (!p.images || !p.images.length) p.images = p.imageUrl ? [p.imageUrl] : [];
-    p.images = p.images.slice(0, MAX_IMAGES);
+    p.images = [...new Set([p.imageUrl, ...p.images].filter(Boolean))].slice(0, MAX_IMAGES);
   }
 }
 

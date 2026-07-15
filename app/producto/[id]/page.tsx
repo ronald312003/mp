@@ -9,6 +9,9 @@ import ProductGallery from "@/components/ProductGallery";
 import WatchShowcase3D from "@/components/WatchShowcase3D";
 import RecoLook, { type LookData } from "@/components/RecoLook";
 import Reveal from "@/components/Reveal";
+import AddToCartButton from "@/components/AddToCartButton";
+import { canonicalProductImages, productImageSrc } from "@/lib/product-images";
+import { getOfficialWatchMedia } from "@/lib/watch-official-media";
 
 export const revalidate = 3600;
 
@@ -90,9 +93,10 @@ export default async function ProductPage({ params }: { params: { id: string } }
     .slice(0, 4);
   // Galería: rutas locales (/generated/…) directas; las remotas pasan por el
   // proxy /api/img para no exponer el host de origen.
-  const gallerySrcs = (product.images?.length ? product.images : [product.imageUrl]).map(
-    (u, i) => (u.startsWith("/") ? u : `/api/img/${product.id}?i=${i}`)
-  );
+  const gallerySrcs = canonicalProductImages(product).map((_, i) => productImageSrc(product, i));
+  const officialWatchMedia = product.type === "watch"
+    ? getOfficialWatchMedia(product.name, product.sourceUrl || "")
+    : null;
 
   // Looks de "Completa el look": uno por audiencia (unisex = para él y para
   // ella, cada uno con su nota, su ambiente y sus piezas coherentes).
@@ -117,7 +121,17 @@ export default async function ProductPage({ params }: { params: { id: string } }
       note,
       ctxTitle,
       ctxBg: ctx.bg,
-      products: comps,
+      // DTO público: no serializa sourceId, URL del proveedor ni costo base
+      // dentro del componente cliente de recomendaciones.
+      products: comps.map((item) => ({
+        id: item.id,
+        name: item.name,
+        brand: item.brand,
+        type: item.type,
+        finalPriceUsd: item.finalPriceUsd,
+        imageUrl: item.imageUrl,
+        images: item.images
+      })),
       visuals
     });
   }
@@ -179,7 +193,15 @@ export default async function ProductPage({ params }: { params: { id: string } }
           )}
 
           <div className="mt-8 flex flex-col gap-3">
-            <button className="btn-primary w-full py-3.5">Consultar por WhatsApp</button>
+            <AddToCartButton
+              product={{
+                id: product.id,
+                brand: product.brand,
+                name: product.name,
+                finalPriceUsd: product.finalPriceUsd,
+                imageSrc: productImageSrc(product)
+              }}
+            />
             <p className="text-center text-xs text-muted">
               Envío a todo el Perú · Pago contra entrega en Lima
             </p>
@@ -188,8 +210,12 @@ export default async function ProductPage({ params }: { params: { id: string } }
       </div>
 
       {/* Experiencia 3D exclusiva para relojes: anatomía animada */}
-      {product.type === "watch" && (
-        <WatchShowcase3D src={gallerySrcs[0]} alt={`${product.brand} ${product.name}`} />
+      {product.type === "watch" && officialWatchMedia && (
+        <WatchShowcase3D
+          src={gallerySrcs[0]}
+          alt={`${product.brand} ${product.name}`}
+          media={officialWatchMedia}
+        />
       )}
 
       {/* COMPLETA EL LOOK — selección de la IA sobre nuestro catálogo.

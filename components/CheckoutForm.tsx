@@ -1,0 +1,165 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useCart } from "./CartProvider";
+
+type Receipt = {
+  id: string;
+  customer: { name: string; phone: string; email: string; address: string; district: string; city: string; reference: string; notes: string };
+  items: Array<{ brand: string; name: string; quantity: number; unitPriceUsd: number; lineUsd: number }>;
+  rate: number;
+  totalUsd: number;
+  totalPen: number;
+  createdAt: string;
+};
+
+async function saveReceiptPdf(order: Receipt) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const left = 18;
+  let y = 20;
+  doc.setTextColor(35, 27, 21);
+  doc.setFont("times", "bold");
+  doc.setFontSize(24);
+  doc.text("Maison Privée", left, y);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(120, 96, 76);
+  doc.text("RESUMEN DE PEDIDO · ATENCIÓN POR WHATSAPP", left, y + 7);
+  doc.setDrawColor(198, 163, 106);
+  doc.line(left, y + 12, 192, y + 12);
+  y += 24;
+
+  doc.setTextColor(35, 27, 21);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Pedido ${order.id}`, left, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(new Date(order.createdAt).toLocaleString("es-PE"), 192, y, { align: "right" });
+  y += 10;
+  const customerLines = [
+    `Cliente: ${order.customer.name}`,
+    `Teléfono: ${order.customer.phone}${order.customer.email ? ` · ${order.customer.email}` : ""}`,
+    `Dirección: ${order.customer.address}, ${order.customer.district}, ${order.customer.city}`,
+    order.customer.reference ? `Referencia: ${order.customer.reference}` : "",
+    order.customer.notes ? `Notas: ${order.customer.notes}` : ""
+  ].filter(Boolean);
+  doc.setFontSize(10);
+  for (const line of customerLines) {
+    const wrapped = doc.splitTextToSize(line, 174);
+    doc.text(wrapped, left, y);
+    y += wrapped.length * 5;
+  }
+  y += 5;
+
+  doc.setFillColor(245, 240, 234);
+  doc.roundedRect(left, y, 174, 9, 2, 2, "F");
+  doc.setFont("helvetica", "bold");
+  doc.text("PIEZA", left + 3, y + 6);
+  doc.text("CANT.", 145, y + 6, { align: "right" });
+  doc.text("TOTAL", 189, y + 6, { align: "right" });
+  y += 15;
+  doc.setFont("helvetica", "normal");
+  for (const item of order.items) {
+    const title = `${item.brand} — ${item.name}`;
+    const wrapped = doc.splitTextToSize(title, 112);
+    doc.text(wrapped, left + 3, y);
+    doc.text(String(item.quantity), 145, y, { align: "right" });
+    doc.text(`$${item.lineUsd.toFixed(2)}`, 189, y, { align: "right" });
+    y += Math.max(8, wrapped.length * 5 + 3);
+    doc.setDrawColor(230, 220, 210);
+    doc.line(left, y - 3, 192, y - 3);
+    if (y > 260) { doc.addPage(); y = 20; }
+  }
+  y += 5;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text(`Total: $${order.totalUsd.toFixed(2)}`, 192, y, { align: "right" });
+  doc.setFontSize(11);
+  doc.text(`S/ ${order.totalPen.toFixed(2)} (tipo de cambio ${order.rate.toFixed(2)})`, 192, y + 7, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(120, 96, 76);
+  doc.text("El costo y plazo de envío se confirman por WhatsApp. Este documento resume una solicitud de pedido.", left, 282);
+  doc.save(`${order.id}.pdf`);
+}
+
+export default function CheckoutForm({ rate }: { rate: number }) {
+  const { items, totalUsd, ready, clear } = useCart();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    const form = new FormData(event.currentTarget);
+    const customer = Object.fromEntries(["name", "phone", "email", "address", "district", "city", "reference", "notes"].map((key) => [key, String(form.get(key) || "").trim()]));
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ customer, items: items.map((item) => ({ id: item.id, quantity: item.quantity })) })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No fue posible registrar el pedido.");
+      await saveReceiptPdf(result.order);
+      clear();
+      window.setTimeout(() => window.location.assign(result.whatsappUrl), 450);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Ocurrió un error inesperado.");
+      setLoading(false);
+    }
+  }
+
+  if (!ready) return <div className="mx-auto my-20 spinner" />;
+  if (!items.length) return (
+    <section className="container-shell py-24 text-center">
+      <h1 className="font-serif text-5xl text-content">No hay piezas para confirmar.</h1>
+      <Link href="/tienda" className="btn-accent mt-8">Volver a la tienda</Link>
+    </section>
+  );
+
+  return (
+    <div className="container-shell py-12 sm:py-16">
+      <p className="eyebrow">Checkout privado</p>
+      <h1 className="mt-3 max-w-3xl font-serif text-5xl leading-none text-content sm:text-6xl">Datos de entrega y confirmación.</h1>
+      <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">Al finalizar se registrará el pedido, se descargará un PDF con el detalle y se abrirá WhatsApp con el mensaje listo.</p>
+
+      <form onSubmit={submit} className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
+        <div className="rounded-[28px] border border-line bg-surface p-6 shadow-soft sm:p-8">
+          <h2 className="font-serif text-3xl text-content">Contacto y entrega</h2>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2">
+            <label className="sm:col-span-2"><span className="label">Nombre completo *</span><input name="name" required maxLength={120} autoComplete="name" className="field" /></label>
+            <label><span className="label">WhatsApp *</span><input name="phone" required maxLength={30} inputMode="tel" autoComplete="tel" className="field" placeholder="+51 999 999 999" /></label>
+            <label><span className="label">Correo (opcional)</span><input name="email" type="email" maxLength={160} autoComplete="email" className="field" /></label>
+            <label className="sm:col-span-2"><span className="label">Dirección completa *</span><input name="address" required maxLength={220} autoComplete="street-address" className="field" placeholder="Calle, número, interior" /></label>
+            <label><span className="label">Distrito *</span><input name="district" required maxLength={100} className="field" /></label>
+            <label><span className="label">Ciudad *</span><input name="city" required maxLength={100} defaultValue="Lima" className="field" /></label>
+            <label className="sm:col-span-2"><span className="label">Referencia</span><input name="reference" maxLength={220} className="field" placeholder="Portería, color de puerta, indicaciones" /></label>
+            <label className="sm:col-span-2"><span className="label">Notas del pedido</span><textarea name="notes" maxLength={500} rows={4} className="field resize-none" placeholder="Talla, horario preferido u otra consulta" /></label>
+          </div>
+        </div>
+
+        <aside className="sticky top-36 rounded-[28px] border border-line bg-surface p-6 shadow-soft">
+          <p className="eyebrow">{items.length} {items.length === 1 ? "pieza" : "piezas"}</p>
+          <div className="mt-5 max-h-56 space-y-3 overflow-y-auto pr-1">
+            {items.map((item) => (
+              <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="line-clamp-2 text-content">{item.quantity}x {item.brand} {item.name}</span><span className="shrink-0 text-muted">${(item.finalPriceUsd * item.quantity).toFixed(2)}</span></div>
+            ))}
+          </div>
+          <div className="mt-5 border-t border-line pt-5 text-right">
+            <strong className="block font-serif text-4xl text-content">${totalUsd.toFixed(2)}</strong>
+            <span className="text-sm text-muted">S/ {(totalUsd * rate).toFixed(2)} · envío por confirmar</span>
+          </div>
+          {error && <p role="alert" className="mt-4 rounded-2xl bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
+          <button disabled={loading} type="submit" className="btn-accent mt-6 w-full disabled:cursor-wait disabled:opacity-60">
+            {loading ? "Generando pedido…" : "Generar PDF y confirmar"}
+          </button>
+          <p className="mt-4 text-xs leading-relaxed text-muted">Tus datos se usan solo para gestionar esta solicitud. La compra se confirma personalmente por WhatsApp.</p>
+        </aside>
+      </form>
+    </div>
+  );
+}

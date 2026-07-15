@@ -84,6 +84,7 @@ export const OUTNET_BRANDS = [
   { match: ["orlebar-brown"], name: "Orlebar Brown", gender: "men" },
   { match: ["thom-browne"], name: "Thom Browne", gender: "men" },
   { match: ["tom-ford"], name: "Tom Ford", gender: "men" },
+  { match: ["christian-louboutin"], name: "Christian Louboutin" },
   { match: ["saint-laurent"], name: "Saint Laurent" },
   { match: ["jimmy-choo"], name: "Jimmy Choo" },
   { match: ["valentino", "valentino-garavani"], name: "Valentino" },

@@ -39,13 +39,14 @@ async function main() {
 
   console.log("→ Aplicando seed.sql…");
   if (reset) {
-    // seed.sql ya trae BEGIN/COMMIT. Los retiramos para envolver TRUNCATE +
-    // seed en una sola transacción: si algo falla, el catálogo anterior vuelve.
+    // seed.sql ya trae BEGIN/COMMIT. Los retiramos para envolver limpieza +
+    // seed en una sola transacción. DELETE (no TRUNCATE CASCADE) conserva el
+    // historial de order_items y deja product_id en NULL mediante la FK.
     const seedBody = seed
       .replace(/(^|\r?\n)BEGIN;\s*(\r?\n)/, "$1")
       .replace(/\r?\nCOMMIT;\s*$/, "\n");
     await client.query(
-      `BEGIN;\nTRUNCATE TABLE product_collections, products RESTART IDENTITY CASCADE;\n${seedBody}\nCOMMIT;`
+      `BEGIN;\nDELETE FROM product_collections;\nDELETE FROM products;\n${seedBody}\nCOMMIT;`
     );
   } else {
     await client.query(seed);
