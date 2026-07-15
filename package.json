@@ -18,6 +18,7 @@
     "images:ai": "node scripts/gen-images-ai.mjs",
     "media:watches": "node scripts/enrich-watch-media.mjs",
     "media:official": "node scripts/enrich-official-product-media.mjs",
+    "media:exact": "node scripts/enrich-exact-media.mjs",
     "recos": "node scripts/gen-recos.mjs",
     "db:sql": "node scripts/gen-sql.mjs",
     "db:push": "node scripts/db-apply.mjs",

@@ -5,7 +5,29 @@ import type { Product } from "./types";
  * La versión opaca invalida el CDN cuando cambia la foto sin revelar su URL.
  */
 export function canonicalProductImages(product: Pick<Product, "imageUrl" | "images">) {
-  return [...new Set([product.imageUrl, ...(product.images || [])].filter(Boolean))];
+  const seen = new Set<string>();
+  return [product.imageUrl, ...(product.images || [])].filter((value): value is string => {
+    if (!value) return false;
+    let identity = value;
+    try {
+      const url = new URL(value);
+      if (/\.jomashop\.com$/i.test(url.hostname)) {
+        // El CDN publica el mismo archivo bajo varios hashes de caché. Si no
+        // se normaliza, la galería muestra dos miniaturas idénticas.
+        url.pathname = url.pathname.replace(
+          /\/media\/catalog\/product\/cache\/[^/]+\//i,
+          "/media/catalog/product/"
+        );
+        url.search = "";
+        identity = url.toString();
+      }
+    } catch {
+      // Las rutas locales de Next son identidades válidas por sí mismas.
+    }
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
 }
 
 function opaqueVersion(value: string) {

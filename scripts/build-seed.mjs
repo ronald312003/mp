@@ -29,6 +29,7 @@ import { geminiEnabled } from "../lib/gemini.mjs";
 import { cleanProductName } from "../lib/product-name.mjs";
 import { enrichOfficialWatchMedia } from "./enrich-watch-media.mjs";
 import { enrichOfficialProductMedia } from "./enrich-official-product-media.mjs";
+import { enrichExactProductMedia } from "./enrich-exact-media.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -290,6 +291,11 @@ async function main() {
   // Medios del fabricante, solo cuando la referencia/modelo coincide exactamente.
   console.log("→ Medios oficiales de relojería (validación por modelo)…");
   await enrichOfficialWatchMedia(products, cacheDir);
+
+  // Respaldo por modelo/GTIN exacto en fabricantes y comercios. La evidencia
+  // queda congelada en un manifiesto y nunca se expone como URL al cliente.
+  console.log("→ Medios adicionales por modelo/GTIN exacto…");
+  await enrichExactProductMedia(products);
 
   // Siempre genera recomendaciones válidas. Gemini mejora la redacción cuando
   // está configurado; sin API se conserva el filtrado profesional por género,

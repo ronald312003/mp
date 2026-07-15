@@ -72,17 +72,37 @@ function citizenMedia(html, model, officialUrl) {
 }
 
 async function discoverCitizen(model) {
-  const officialUrl = `https://www.citizenwatch.com/latam/producto/${model}.html`;
-  try {
-    const response = await fetch(officialUrl, {
-      headers: { "user-agent": UA, "accept-language": "es,en;q=0.8" },
-      signal: AbortSignal.timeout(15000)
-    });
-    if (!response.ok) return null;
-    return citizenMedia(await response.text(), model, officialUrl);
-  } catch {
-    return null;
+  const urls = [
+    `https://www.citizenwatch.com/latam/producto/${model}.html`,
+    `https://www.citizenwatch.com/us/en/product/${model}.html`
+  ];
+  for (const officialUrl of urls) {
+    try {
+      const response = await fetch(officialUrl, {
+        headers: { "user-agent": UA, "accept-language": "es,en;q=0.8" },
+        signal: AbortSignal.timeout(15000)
+      });
+      if (!response.ok) continue;
+      const html = await response.text();
+      const structured = citizenMedia(html, model, officialUrl);
+      if (structured) return structured;
+
+      // La web estadounidense usa un storefront React sin JSON-LD, pero
+      // renderiza en servidor la galería exacta con etiquetas "view N".
+      const canonicalModel =
+        html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["'][^"']*\/product\/([^/"'.]+)(?:\.html)?/i)?.[1]
+        || html.match(/<link[^>]+hrefLang=["']en-us["'][^>]+href=["'][^"']*\/product\/([^/"']+)/i)?.[1];
+      if (canonicalModel?.toUpperCase() !== model) continue;
+      const matches = [...html.matchAll(/<img[^>]+src=["'](https:\/\/citizenwatch\.widen\.net\/content\/[^"']+)["'][^>]+alt=["'][^"']+\s-\sview\s\d+["']/gi)];
+      const images = [...new Set(matches.map((match) => decode(match[1])))]
+        .map((url) => url.replace(/\?.*$/, "") + "?width=1600&height=2000&quality=85&crop=false&keep=c")
+        .slice(0, 7);
+      if (images.length) {
+        return { brand: "Citizen", model, title: model, officialUrl, images, technicalImage: null, videoUrl: null, verifiedAt: new Date().toISOString() };
+      }
+    } catch {}
   }
+  return null;
 }
 
 function absoluteImageUrls(html) {
@@ -170,8 +190,9 @@ export async function enrichOfficialWatchMedia(products) {
       : /tsuyosa|promaster|prx/i.test(value.product.name) ? 1 : 2;
     return score(a) - score(b);
   });
-  const limit = Math.max(0, Number(process.env.OFFICIAL_WATCH_LIMIT || 36));
-  const missing = preferred.filter(({ model }) => !media[model]).slice(0, limit);
+  const limit = Math.max(0, Number(process.env.OFFICIAL_WATCH_LIMIT || 0));
+  const unverified = preferred.filter(({ model }) => !media[model]);
+  const missing = limit ? unverified.slice(0, limit) : unverified;
   let discovered = 0;
   await pool(missing, 4, async ({ model }) => {
     const product = preferred.find((entry) => entry.model === model)?.product;

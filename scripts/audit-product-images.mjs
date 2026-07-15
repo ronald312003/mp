@@ -10,11 +10,38 @@ const requestedTypes = new Set(
 );
 const concurrency = Math.max(1, Number(process.env.IMAGE_AUDIT_CONCURRENCY || 12));
 const limit = Math.max(0, Number(process.env.IMAGE_AUDIT_LIMIT || 0));
+const auditAll = process.env.IMAGE_AUDIT_ALL !== "0";
+const minimumImages = Math.max(1, Number(process.env.IMAGE_AUDIT_MIN_IMAGES || 3));
+const coverageOnly = process.env.IMAGE_AUDIT_COVERAGE_ONLY === "1";
+const failureDetails = process.env.IMAGE_AUDIT_FAILURE_DETAILS !== "0";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36";
 
 const products = catalog.products
   .filter((product) => requestedTypes.has(product.type))
   .slice(0, limit || undefined);
+
+function imageIdentity(value) {
+  try {
+    const url = new URL(value);
+    if (/\.jomashop\.com$/i.test(url.hostname)) {
+      url.pathname = url.pathname.replace(/\/media\/catalog\/product\/cache\/[^/]+\//i, "/media/catalog/product/");
+      url.search = "";
+    }
+    return url.toString();
+  } catch {
+    return String(value || "");
+  }
+}
+
+function distinctImages(product) {
+  const seen = new Set();
+  return [product.imageUrl, ...(product.images || [])].filter((url) => {
+    const key = imageIdentity(url);
+    if (!url || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 async function inspect(url) {
   if (!url) return { ok: false, reason: "empty-url" };
@@ -50,35 +77,104 @@ async function inspect(url) {
   return { ok: false, reason: "fetch" };
 }
 
-const queue = [...products];
 const results = [];
-await Promise.all(Array.from({ length: concurrency }, async () => {
-  while (queue.length) {
-    const product = queue.shift();
-    const result = await inspect(product.imageUrl);
-    results.push({
-      id: product.id,
-      type: product.type,
-      brand: product.brand,
-      name: product.name,
-      imageCount: product.images?.length || 0,
-      url: product.imageUrl,
-      ...result
-    });
-  }
-}));
+if (coverageOnly) {
+  const queue = [...products];
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (queue.length) {
+      const product = queue.shift();
+      const images = distinctImages(product);
+      let reachable = 0;
+      for (const [imageIndex, url] of images.entries()) {
+        const result = await inspect(url);
+        results.push({
+          id: product.id,
+          type: product.type,
+          brand: product.brand,
+          name: product.name,
+          imageCount: images.length,
+          imageIndex,
+          url,
+          ...result
+        });
+        if (result.ok) reachable++;
+        if (reachable >= minimumImages) break;
+      }
+    }
+  }));
+} else {
+  const queue = products.flatMap((product) => {
+    const images = distinctImages(product);
+    return (auditAll ? images : images.slice(0, 1)).map((url, imageIndex) => ({
+      product,
+      url,
+      imageIndex,
+      imageCount: images.length
+    }));
+  });
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (queue.length) {
+      const { product, url, imageIndex, imageCount } = queue.shift();
+      const result = await inspect(url);
+      results.push({
+        id: product.id,
+        type: product.type,
+        brand: product.brand,
+        name: product.name,
+        imageCount,
+        imageIndex,
+        url,
+        ...result
+      });
+    }
+  }));
+}
 
 const failures = results.filter((result) => !result.ok);
-const sparse = results.filter((result) => result.imageCount < 2);
+const sparse = products
+  .map((product) => ({
+    id: product.id,
+    type: product.type,
+    brand: product.brand,
+    name: product.name,
+    imageCount: distinctImages(product).length
+  }))
+  .filter((result) => result.imageCount < minimumImages);
+const usable = products.map((product) => {
+  const rows = results.filter((result) => result.id === product.id);
+  return {
+    id: product.id,
+    type: product.type,
+    brand: product.brand,
+    name: product.name,
+    reachableImages: rows.filter((result) => result.ok).length,
+    checkedImages: rows.length
+  };
+});
+const unusable = usable.filter((result) => result.reachableImages < minimumImages);
 const byType = Object.fromEntries([...requestedTypes].map((type) => {
   const rows = results.filter((result) => result.type === type);
+  const typedProducts = products.filter((product) => product.type === type);
+  const brokenProducts = new Set(rows.filter((result) => !result.ok).map((result) => result.id));
   return [type, {
-    checked: rows.length,
-    reachable: rows.filter((result) => result.ok).length,
-    broken: rows.filter((result) => !result.ok).length,
-    singleImage: rows.filter((result) => result.imageCount < 2).length
+    products: typedProducts.length,
+    checkedImages: rows.length,
+    reachableImages: rows.filter((result) => result.ok).length,
+    brokenImages: rows.filter((result) => !result.ok).length,
+    productsWithBrokenImages: brokenProducts.size,
+    belowMinimum: typedProducts.filter((product) => distinctImages(product).length < minimumImages).length,
+    belowReachableMinimum: unusable.filter((product) => product.type === type).length
   }];
 }));
 
-console.log(JSON.stringify({ byType, failures, sparse }, null, 2));
-if (failures.length) process.exitCode = 1;
+console.log(JSON.stringify({
+  auditAll,
+  coverageOnly,
+  minimumImages,
+  byType,
+  brokenImageCount: failures.length,
+  failures: failureDetails ? failures : undefined,
+  sparse,
+  unusable
+}, null, 2));
+if (unusable.length || sparse.length) process.exitCode = 1;

@@ -2,10 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCatalog } from "@/lib/data";
 import ProductCard from "@/components/ProductCard";
-import TypeStrip from "@/components/TypeStrip";
 import Reveal from "@/components/Reveal";
 import StyleConcierge from "@/components/StyleConcierge";
 import HomeHouseReel from "@/components/HomeHouseReel";
+import HomeFilmRoom from "@/components/HomeFilmRoom";
 import type { Product } from "@/lib/types";
 
 export const revalidate = 3600;
@@ -15,13 +15,7 @@ function pickFeatured(products: Product[], type: string, n: number) {
 }
 
 export default async function Home() {
-  const { collections, products, exchange } = await getCatalog();
-  const counts = new Map<string, number>();
-  for (const product of products) {
-    for (const collection of product.collections) {
-      counts.set(collection, (counts.get(collection) ?? 0) + 1);
-    }
-  }
+  const { products, exchange } = await getCatalog();
 
   const preferredBrands = [
     "Tom Ford", "Thom Browne", "Sandro", "Frescobol Carioca", "Orlebar Brown",
@@ -35,11 +29,6 @@ export default async function Home() {
     ...preferred,
     ...[...availableBrands].filter((brand) => !preferredSet.has(brand)).sort()
   ];
-  const occasionOrder = ["casual", "oficina", "noche", "verano", "elegante"];
-  const occasionCollections = occasionOrder
-    .map((slug) => collections.find((collection) => collection.slug === slug))
-    .filter((collection): collection is NonNullable<typeof collection> => Boolean(collection));
-
   const featured = [
     ...pickFeatured(products.filter((product) => product.gender === "men"), "clothing", 2),
     ...pickFeatured(products.filter((product) => product.gender === "men"), "shoes", 2),
@@ -73,44 +62,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="container-shell py-16 sm:py-24">
-        <Reveal>
-          <div className="mb-9 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-            <div>
-              <p className="eyebrow">Ir directamente</p>
-              <h2 className="mt-3 font-serif text-4xl text-content sm:text-5xl">¿Qué estás buscando?</h2>
-            </div>
-            <Link href="/tienda" className="text-base font-medium text-muted hover:text-content">
-              Ver todo el catálogo →
-            </Link>
-          </div>
-        </Reveal>
-        <Reveal delay={80}><TypeStrip /></Reveal>
-      </section>
-
-      <section className="border-y border-line bg-surface py-16 sm:py-24">
-        <div className="container-shell">
-          <Reveal>
-            <p className="eyebrow">Comprar por momento</p>
-            <h2 className="mt-3 font-serif text-4xl text-content sm:text-5xl">La ocasión primero</h2>
-            <p className="mt-3 max-w-2xl text-lg text-muted">
-              Una selección útil comienza por saber dónde y cómo la vas a usar.
-            </p>
-          </Reveal>
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
-            {occasionCollections.map((collection, index) => (
-              <Link key={collection.slug} href={`/coleccion/${collection.slug}`} className="group flex min-h-[220px] flex-col justify-between rounded-[24px] border border-line bg-bg p-5 transition duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-lift sm:min-h-[280px] sm:p-6">
-                <span className="font-serif text-5xl text-accent/35">0{index + 1}</span>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-muted sm:text-xs">{counts.get(collection.slug) || 0} piezas</p>
-                  <h3 className="mt-2 font-serif text-2xl leading-none text-content sm:text-3xl">{collection.title}</h3>
-                  <p className="mt-3 hidden text-sm leading-relaxed text-muted sm:block">{collection.subtitle}</p>
-                  <span className="mt-4 inline-block text-sm text-accent transition-transform group-hover:translate-x-1">Explorar →</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+      <section className="container-shell py-12 sm:py-20">
+        <Reveal><HomeFilmRoom /></Reveal>
       </section>
 
       <section className="container-shell py-16 sm:py-24">
