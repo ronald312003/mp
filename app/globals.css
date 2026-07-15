@@ -19,17 +19,17 @@
 }
 
 .dark {
-  --c-bg: 48 40 33;            /* cacao claro */
-  --c-surface: 60 50 41;
-  --c-surface-2: 72 60 49;
-  --c-border: 96 80 65;
-  --c-text: 250 243 233;
-  --c-muted: 207 188 166;
-  --c-accent: 235 200 160;     /* marrón más claro en oscuro */
-  --c-accent-strong: 245 215 175;
-  --c-accent-fg: 26 20 15;
-  --c-inverse: 237 229 218;    /* botones claros en oscuro */
-  --c-inverse-fg: 30 24 19;
+  --c-bg: 66 55 45;            /* marrón cálido, más claro */
+  --c-surface: 80 67 55;
+  --c-surface-2: 94 79 65;
+  --c-border: 126 107 88;
+  --c-text: 253 248 241;
+  --c-muted: 222 207 189;
+  --c-accent: 238 204 164;     /* marrón más claro en oscuro */
+  --c-accent-strong: 247 218 180;
+  --c-accent-fg: 40 30 22;
+  --c-inverse: 242 233 221;    /* botones claros en oscuro */
+  --c-inverse-fg: 44 35 27;
   color-scheme: dark;
 }
 

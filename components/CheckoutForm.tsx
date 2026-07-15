@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import SmartImage from "./SmartImage";
 import { useCart } from "./CartProvider";
+
+const STEPS = [
+  { key: "contacto", title: "Contacto", hint: "Para coordinar tu pedido" },
+  { key: "entrega", title: "Entrega", hint: "Dónde recibirás tus piezas" },
+  { key: "confirmar", title: "Confirmación", hint: "Revisa y envía por WhatsApp" }
+] as const;
 
 type Receipt = {
   id: string;
@@ -108,9 +114,35 @@ export default function CheckoutForm({ rate }: { rate: number }) {
   const { items, totalUsd, ready, clear } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState(0);
+  const stepRefs = [
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null),
+    useRef<HTMLDivElement>(null)
+  ];
+
+  // Valida solo los campos del paso visible con los mensajes nativos del
+  // navegador; así el cliente nunca ve más de 3-4 campos a la vez.
+  function validateStep(index: number) {
+    const container = stepRefs[index].current;
+    if (!container) return true;
+    const fields = container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
+    for (const field of fields) {
+      if (!field.checkValidity()) {
+        field.reportValidity();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function next() {
+    if (validateStep(step)) setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!validateStep(step)) return;
     setLoading(true);
     setError("");
     const form = new FormData(event.currentTarget);
@@ -155,22 +187,55 @@ export default function CheckoutForm({ rate }: { rate: number }) {
       <h1 className="mt-3 max-w-3xl font-serif text-[2.6rem] leading-none text-content sm:text-6xl">Completa tu información de entrega.</h1>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Revisaremos tu pedido, confirmaremos el envío por WhatsApp y te enviaremos un PDF con el resumen completo.</p>
 
-      <form onSubmit={submit} className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
+      <form
+        onSubmit={submit}
+        noValidate
+        onKeyDown={(event) => {
+          // Enter en un campo de los pasos 1-2 avanza al siguiente paso en
+          // lugar de intentar enviar un formulario incompleto.
+          if (event.key === "Enter" && step < STEPS.length - 1 && (event.target as HTMLElement).tagName === "INPUT") {
+            event.preventDefault();
+            next();
+          }
+        }}
+        className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start"
+      >
         <div className="rounded-[28px] border border-line bg-surface p-6 shadow-soft sm:p-8">
-          <h2 className="font-serif text-3xl text-content">Contacto y entrega</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <label className="sm:col-span-2">
+          {/* Indicador de pasos */}
+          <ol className="flex items-center gap-2" aria-label="Pasos del pedido">
+            {STEPS.map((s, i) => (
+              <li key={s.key} className="flex flex-1 flex-col gap-2">
+                <span className={`h-1 rounded-full transition ${i <= step ? "bg-accent" : "bg-surface2"}`} />
+                <span className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${i === step ? "text-content" : "text-muted"}`}>
+                  {s.title}
+                </span>
+              </li>
+            ))}
+          </ol>
+
+          <h2 className="mt-6 font-serif text-3xl text-content">
+            {STEPS[step].title}
+          </h2>
+          <p className="mt-1 text-sm text-muted">{STEPS[step].hint} · paso {step + 1} de {STEPS.length}</p>
+
+          {/* Paso 1 · Contacto */}
+          <div ref={stepRefs[0]} className={step === 0 ? "mt-6 grid gap-5" : "hidden"}>
+            <label>
               <span className="label">Nombre completo *</span>
               <input name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" placeholder="Tu nombre aquí" />
             </label>
             <label>
               <span className="label">WhatsApp *</span>
-              <input name="phone" required minLength={9} maxLength={30} inputMode="tel" autoComplete="tel" className="field" placeholder="+51 999 999 999" title="Incluye código de país (ej: +51 para Perú)" />
+              <input name="phone" required minLength={9} maxLength={30} inputMode="tel" autoComplete="tel" pattern="[+0-9 ()-]{9,30}" className="field" placeholder="+51 999 999 999" title="Escribe un número válido, idealmente con código de país (+51)" />
             </label>
             <label>
               <span className="label">Correo (opcional)</span>
               <input name="email" type="email" maxLength={160} autoComplete="email" className="field" placeholder="tu@email.com" />
             </label>
+          </div>
+
+          {/* Paso 2 · Entrega */}
+          <div ref={stepRefs[1]} className={step === 1 ? "mt-6 grid gap-5 sm:grid-cols-2" : "hidden"}>
             <label className="sm:col-span-2">
               <span className="label">Dirección completa *</span>
               <input name="address" required minLength={5} maxLength={220} autoComplete="street-address" className="field" placeholder="Av. Ejemplo 123, Dpto. 456" />
@@ -187,10 +252,40 @@ export default function CheckoutForm({ rate }: { rate: number }) {
               <span className="label">Referencia (opcional)</span>
               <input name="reference" maxLength={220} className="field" placeholder="Portería, color de puerta, indicaciones adicionales" />
             </label>
-            <label className="sm:col-span-2">
+          </div>
+
+          {/* Paso 3 · Confirmación */}
+          <div ref={stepRefs[2]} className={step === 2 ? "mt-6 grid gap-5" : "hidden"}>
+            <label>
               <span className="label">Notas del pedido (opcional)</span>
-              <textarea name="notes" maxLength={500} rows={4} className="field resize-none" placeholder="Talla, horario preferido, comentarios especiales" />
+              <textarea name="notes" maxLength={500} rows={3} className="field resize-none" placeholder="Talla, horario preferido, comentarios especiales" />
             </label>
+            <div className="rounded-2xl bg-surface2 p-4 text-sm leading-relaxed text-muted">
+              Al confirmar se descargará un PDF con tu pedido y se abrirá WhatsApp
+              con el mensaje listo para enviar. Adjunta allí el PDF descargado.
+            </div>
+          </div>
+
+          {error && <p role="alert" className="mt-5 rounded-2xl bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
+
+          {/* Navegación de pasos */}
+          <div className="mt-7 flex items-center justify-between gap-3">
+            {step > 0 ? (
+              <button type="button" onClick={() => setStep((s) => s - 1)} className="btn-ghost">
+                ← Atrás
+              </button>
+            ) : (
+              <Link href="/carrito" className="btn-ghost">← Bolsa</Link>
+            )}
+            {step < STEPS.length - 1 ? (
+              <button type="button" onClick={next} className="btn-primary flex-1 sm:flex-none sm:px-10">
+                Continuar
+              </button>
+            ) : (
+              <button disabled={loading} type="submit" className="btn-accent flex-1 disabled:cursor-wait disabled:opacity-60 sm:flex-none sm:px-8">
+                {loading ? "Descargando PDF y abriendo WhatsApp…" : "Realizar pedido por WhatsApp"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -214,12 +309,9 @@ export default function CheckoutForm({ rate }: { rate: number }) {
           <div className="mt-5 border-t border-line pt-5 text-right">
             <strong className="block font-serif text-4xl text-content">${totalUsd.toFixed(2)}</strong>
             <span className="text-sm text-muted">S/ {(totalUsd * rate).toFixed(2)} · envío por confirmar</span>
+            <span className="mt-1 block text-xs text-muted">Tipo de cambio: 1 USD ≈ S/ {rate.toFixed(2)}</span>
           </div>
-          {error && <p role="alert" className="mt-4 rounded-2xl bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
-          <button disabled={loading} type="submit" className="btn-accent mt-6 w-full disabled:cursor-wait disabled:opacity-60">
-            {loading ? "Descargando PDF y abriendo WhatsApp…" : "Realizar pedido por WhatsApp"}
-          </button>
-          <p className="mt-4 text-xs leading-relaxed text-muted">WhatsApp no permite que una web adjunte archivos automáticamente: el PDF quedará descargado para que lo agregues al chat. Tus datos se usan solo para gestionar esta solicitud.</p>
+          <p className="mt-4 text-xs leading-relaxed text-muted">Tus datos se usan solo para gestionar esta solicitud.</p>
         </aside>
       </form>
     </div>

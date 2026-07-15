@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { getProduct } from "@/lib/data";
 import { canonicalProductImages } from "@/lib/product-images";
 
@@ -5,6 +6,35 @@ export const dynamic = "force-dynamic";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+const isJomashop = (url: string) => {
+  try { return /\.jomashop\.com$/i.test(new URL(url).hostname); } catch { return false; }
+};
+
+// Jomashop responde 200 con una imagen gris "JS" cuando la foto no existe.
+// Se obtiene su firma (tamaño + sha1) una vez por instancia, con los MISMOS
+// headers que usa grab(), para descartar ese placeholder y pasar a la
+// siguiente vista real del producto.
+const KNOWN_PLACEHOLDER_URL =
+  "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/j/e/jean-paul-gaultier-mens-le-male-le-parfum-edp-spray-42-oz-fragrances-8435415032315_2.jpg";
+const sha1 = (buf: ArrayBuffer) => createHash("sha1").update(Buffer.from(buf)).digest("hex");
+let placeholderSig: Promise<{ size: number; hash: string } | null> | undefined;
+function jomashopPlaceholderSig() {
+  placeholderSig ??= (async () => {
+    try {
+      const r = await fetch(KNOWN_PLACEHOLDER_URL, {
+        headers: { "user-agent": UA, accept: "image/*,*/*" },
+        signal: AbortSignal.timeout(7000)
+      });
+      if (!r.ok) return null;
+      const buf = await r.arrayBuffer();
+      return { size: buf.byteLength, hash: sha1(buf) };
+    } catch {
+      return null;
+    }
+  })();
+  return placeholderSig;
+}
 
 function fallbackSvg(label: string) {
   const safe = label.replace(/[<>&"']/g, "").slice(0, 48);
@@ -53,6 +83,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     if (!r.ok || !r.body) throw new Error("upstream " + r.status);
     const ct = r.headers.get("content-type") || "image/jpeg";
     if (!ct.startsWith("image/")) throw new Error("no image");
+    if (isJomashop(target)) {
+      const sig = await jomashopPlaceholderSig();
+      const buf = await r.arrayBuffer();
+      if (sig && buf.byteLength === sig.size && sha1(buf) === sig.hash) {
+        throw new Error("jomashop placeholder");
+      }
+      return { body: buf, ct };
+    }
     return { body: r.body, ct };
   }
 
