@@ -137,8 +137,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
   }
 
   return (
-    <div className="container-shell py-8">
-      <nav className="mb-6 text-xs text-muted">
+    <div className="container-shell py-6 sm:py-8">
+      <nav className="no-scrollbar mb-5 flex overflow-x-auto whitespace-nowrap text-xs text-muted sm:mb-6">
         <Link href="/" className="hover:text-content">Inicio</Link>
         <span className="mx-2">/</span>
         <Link href={`/tienda?type=${product.type}`} className="hover:text-content">
@@ -148,14 +148,14 @@ export default async function ProductPage({ params }: { params: { id: string } }
         <span className="text-content">{product.brand}</span>
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
         {/* Galería con efecto 3D (varias vistas reales del producto) */}
         <ProductGallery srcs={gallerySrcs} alt={`${product.brand} ${product.name}`} />
 
         {/* Detalle */}
-        <div className="flex flex-col">
+        <div className="min-w-0 flex flex-col">
           <p className="eyebrow">{product.brand}</p>
-          <h1 className="mt-2 font-serif text-3xl leading-tight text-content sm:text-4xl">
+          <h1 className="mt-2 font-serif text-[1.85rem] leading-tight text-content sm:text-4xl">
             {product.name}
           </h1>
 
@@ -222,7 +222,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
           Unisex = dos looks (Para él / Para ella), cada uno con su nota,
           sus piezas y visuales de lo que la nota menciona. */}
       {looks.some((l) => l.products.length > 0) && (
-        <Reveal as="section" className="mt-24">
+        <Reveal as="section" className="mt-16 sm:mt-24">
           <div className="mb-8">
             <p className="eyebrow">Estilismo por IA</p>
             <div className="rule-gold mt-3" />
@@ -240,7 +240,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       )}
 
       {related.length > 0 && (
-        <section className="mt-24">
+        <section className="mt-16 sm:mt-24">
           <h2 className="mb-6 font-serif text-2xl text-content">También te puede gustar</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {related.map((p) => (

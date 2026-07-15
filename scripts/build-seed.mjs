@@ -28,6 +28,7 @@ import { generateAiImages } from "./gen-images-ai.mjs";
 import { geminiEnabled } from "../lib/gemini.mjs";
 import { cleanProductName } from "../lib/product-name.mjs";
 import { enrichOfficialWatchMedia } from "./enrich-watch-media.mjs";
+import { enrichOfficialProductMedia } from "./enrich-official-product-media.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -280,6 +281,11 @@ async function main() {
   // Galería multi-imagen (Jomashop media_gallery / vistas TheOutnet / "en modelo")
   console.log("→ Galerías de imágenes (varias vistas por producto)…");
   await enrichImages(products, cacheDir);
+
+  // Medios editoriales del fabricante con coincidencia exacta de referencia,
+  // marca, tipo y nombre. Nunca sustituye el producto por una búsqueda genérica.
+  console.log("→ Medios oficiales de fragancias (validación por referencia)…");
+  enrichOfficialProductMedia(products);
 
   // Medios del fabricante, solo cuando la referencia/modelo coincide exactamente.
   console.log("→ Medios oficiales de relojería (validación por modelo)…");

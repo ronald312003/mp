@@ -1,53 +1,51 @@
 import Link from "next/link";
-import Image from "next/image";
 
 const TYPES = [
   {
     href: "/tienda?type=watch",
     label: "Relojes",
     sub: "Seiko · Tissot · Citizen",
-    img: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=800&q=80"
+    note: "Precisión y oficio"
   },
   {
     href: "/tienda?type=perfume",
     label: "Perfumes",
     sub: "Xerjoff · Creed · Dior · Armani",
-    img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=800&q=80"
+    note: "Firma y memoria"
   },
   {
     href: "/tienda?type=clothing",
     label: "Ropa",
     sub: "Sandro · Thom Browne · Tom Ford",
-    img: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&w=800&q=80"
+    note: "Cortes para cada día"
   },
   {
     href: "/tienda?type=shoes",
     label: "Zapatos",
     sub: "Ferragamo · Bally · Santoni",
-    img: "https://images.unsplash.com/photo-1449505278894-297fdb3edbc1?auto=format&fit=crop&w=800&q=80"
+    note: "Forma y movimiento"
   }
 ];
 
 export default function TypeStrip() {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-      {TYPES.map((t) => (
+    <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      {TYPES.map((t, index) => (
         <Link
           key={t.href}
           href={t.href}
-          className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-[24px] sm:aspect-[4/5]"
+          className="group relative flex min-h-[210px] flex-col justify-between overflow-hidden rounded-[24px] border border-line bg-surface p-5 transition duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-lift sm:min-h-[280px] sm:p-7"
         >
-          <Image
-            src={t.img}
-            alt={t.label}
-            fill
-            sizes="(max-width:1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-[900ms] group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-          <div className="relative p-6 text-white">
-            <h3 className="font-serif text-3xl">{t.label}</h3>
-            <p className="mt-2 text-sm font-medium text-white/80">{t.sub}</p>
+          <span className="pointer-events-none absolute -right-6 -top-8 font-serif text-[8rem] leading-none text-accent/10 transition duration-700 group-hover:rotate-6 group-hover:scale-110 sm:text-[11rem]">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <div className="relative flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted sm:text-xs">{t.note}</span>
+            <span aria-hidden="true" className="text-xl text-accent transition-transform group-hover:translate-x-1">↗</span>
+          </div>
+          <div className="relative">
+            <h3 className="font-serif text-3xl leading-none text-content sm:text-4xl">{t.label}</h3>
+            <p className="mt-3 text-xs font-medium leading-relaxed text-muted sm:text-sm">{t.sub}</p>
           </div>
         </Link>
       ))}

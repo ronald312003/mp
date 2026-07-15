@@ -28,9 +28,9 @@ export default function ProductCard({ product, rate }: { product: ProductCardDat
           alt={`${product.brand} ${product.name}`}
           fill
           sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 25vw"
-          className="object-contain object-center p-4 transition-transform duration-700 group-hover:scale-[1.06]"
+          className="object-contain object-center p-2.5 transition-transform duration-700 group-hover:scale-[1.06] sm:p-4"
         />
-        <span className="absolute left-4 top-4 rounded-full bg-bg/90 px-3 py-1.5 text-xs font-medium text-muted backdrop-blur">
+        <span className="absolute left-3 top-3 rounded-full bg-bg/90 px-2.5 py-1 text-[10px] font-medium text-muted backdrop-blur sm:left-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-xs">
           {TYPE_LABEL[product.type] ?? product.type}
         </span>
         {/* CTA que aparece al hover */}
@@ -39,9 +39,9 @@ export default function ProductCard({ product, rate }: { product: ProductCardDat
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-5">
+      <div className="flex flex-1 flex-col gap-2 p-3.5 sm:gap-2.5 sm:p-5">
         <p className="eyebrow">{product.brand}</p>
-        <p className="line-clamp-2 min-h-[3rem] text-base font-medium leading-snug text-content">
+        <p className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug text-content sm:min-h-[3rem] sm:text-base">
           {product.name}
         </p>
         <div className="mt-auto pt-2">

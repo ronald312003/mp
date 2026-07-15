@@ -6,6 +6,8 @@ import { getSql } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 const text = (value: unknown, max: number) => String(value || "").trim().slice(0, max);
+const productLabel = (brand: string, name: string) =>
+  name.toLocaleLowerCase().startsWith(brand.toLocaleLowerCase()) ? name : `${brand} ${name}`;
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +24,16 @@ export async function POST(request: Request) {
     };
     if (!customer.name || !customer.phone || !customer.address || !customer.district) {
       return NextResponse.json({ error: "Completa nombre, teléfono, dirección y distrito." }, { status: 400 });
+    }
+    const phoneDigits = customer.phone.replace(/\D/g, "");
+    if (customer.name.length < 2 || phoneDigits.length < 9 || phoneDigits.length > 15) {
+      return NextResponse.json({ error: "Revisa el nombre y escribe un WhatsApp válido con código de país." }, { status: 400 });
+    }
+    if (customer.address.length < 5 || customer.district.length < 2 || customer.city.length < 2) {
+      return NextResponse.json({ error: "Completa una dirección, distrito y ciudad válidos." }, { status: 400 });
+    }
+    if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
+      return NextResponse.json({ error: "El correo electrónico no tiene un formato válido." }, { status: 400 });
     }
 
     const requested = Array.isArray(body.items) ? body.items.slice(0, 30) : [];
@@ -68,7 +80,7 @@ export async function POST(request: Request) {
       ]);
     }
 
-    const lines = items.map((item) => `• ${item.quantity}x ${item.brand} ${item.name} — $${item.lineUsd.toFixed(2)}`);
+    const lines = items.map((item) => `• ${item.quantity}x ${productLabel(item.brand, item.name)} — $${item.lineUsd.toFixed(2)}`);
     const message = [
       `Hola, deseo confirmar el pedido ${orderId}.`,
       "",
@@ -80,7 +92,7 @@ export async function POST(request: Request) {
       customer.reference ? `Referencia: ${customer.reference}` : "",
       customer.notes ? `Nota: ${customer.notes}` : "",
       "",
-      "Adjunto/confirmo el resumen PDF generado por Maison Privée."
+      `El PDF ${orderId}.pdf ya fue descargado; lo adjuntaré en este chat para confirmar.`
     ].filter(Boolean).join("\n");
 
     return NextResponse.json({

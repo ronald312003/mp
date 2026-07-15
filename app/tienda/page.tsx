@@ -78,8 +78,8 @@ export default async function ShopPage({
     <div className="container-shell py-10 sm:py-14">
       <div className="mb-9">
         <p className="eyebrow">Catálogo</p>
-        <h1 className="mt-3 font-serif text-5xl text-content">Tu selección</h1>
-        <p className="mt-3 max-w-2xl text-lg text-muted">
+        <h1 className="mt-3 font-serif text-[2.65rem] text-content sm:text-5xl">Tu selección</h1>
+        <p className="mt-3 max-w-2xl text-base text-muted sm:text-lg">
           Ajusta solo lo necesario. Mostramos primero las piezas que encajan con lo que buscas.
         </p>
       </div>
@@ -104,9 +104,9 @@ export default async function ShopPage({
       {/* Toolbar: género · marca · orden — legible y espaciado */}
       <div className="mb-5 flex flex-col gap-5 rounded-2xl border border-line bg-surface p-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-10 sm:p-5">
         {/* Género */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted">Para</span>
-          <div className="flex gap-1">
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
+          <span className="sticky left-0 z-10 bg-surface pr-1 text-sm font-medium text-muted">Para</span>
+          <div className="flex shrink-0 gap-1">
             {GENDERS.map((g) => (
               <Link
                 key={g.key}
@@ -152,9 +152,9 @@ export default async function ShopPage({
         </details>
 
         {/* Orden */}
-        <div className="flex items-center gap-2 sm:ml-auto">
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto sm:ml-auto">
           <span className="text-sm font-medium text-muted">Orden</span>
-          <div className="flex gap-1">
+          <div className="flex shrink-0 gap-1">
             {SORTS.map((s) => (
               <Link
                 key={s.key}

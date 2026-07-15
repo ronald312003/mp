@@ -1,0 +1,46 @@
+{
+  "Y-A5LP3": {
+    "brand": "Gucci",
+    "type": "perfume",
+    "nameIncludes": "Guilty Absolu",
+    "officialUrl": "https://www.gucci.com/fr/fr/pr/beauty/fragrances/fragrances-for-men/gucci-guilty-absolu-de-parfum-pour-homme-60ml-p-829671999990099",
+    "images": [
+      "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1750840203/829671_99999_0099_001_100_0000_Light-gucci-guilty-absolu-de-parfum-pour-homme-60ml.jpg",
+      "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1750840205/829671_99999_0099_002_100_0000_Light-gucci-guilty-absolu-de-parfum-pour-homme-60ml.jpg"
+    ],
+    "verifiedAt": "2026-07-14T00:00:00.000Z"
+  },
+  "Z-38UBM": {
+    "brand": "Gucci",
+    "type": "perfume",
+    "nameIncludes": "Vanilla Firenze",
+    "officialUrl": "https://www.gucci.com/it/it/pr/beauty/beauty-makeup/the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum-p-801718999990099",
+    "images": [
+      "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1733212812/801718_99999_0099_001_100_0000_Light-the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum.jpg",
+      "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1733212813/801718_99999_0099_002_100_0000_Light-the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum.jpg"
+    ],
+    "verifiedAt": "2026-07-14T00:00:00.000Z"
+  },
+  "Y-A5FVB": {
+    "brand": "Creed",
+    "type": "perfume",
+    "nameIncludes": "Royal Princess Oud",
+    "officialUrl": "https://creedboutique.com/products/royal-princess-oud?variant=32812868042849",
+    "images": [
+      "https://creedboutique.com/cdn/shop/files/1500x1500_Royal-Princess-Oud_75ml.jpg?v=1740695961&width=1600",
+      "https://creedboutique.com/cdn/shop/files/1500x1500_RPO-Notes_1.jpg?v=1764095747&width=1600"
+    ],
+    "verifiedAt": "2026-07-14T00:00:00.000Z"
+  },
+  "Z-QHBEH": {
+    "brand": "Xerjoff",
+    "type": "perfume",
+    "nameIncludes": "Alexandria II",
+    "officialUrl": "https://www.xerjoff.com/en-us/products/alexandria-ll-parfum",
+    "images": [
+      "https://www.xerjoff.com/cdn/shop/files/gallery-xerjoff-alexandriaII-still.jpg?v=1749809880&width=1946",
+      "https://www.xerjoff.com/cdn/shop/files/gallery-xerjoff-alexandriaII-eau-de-parfum-100ml.png?v=1749810026&width=1946"
+    ],
+    "verifiedAt": "2026-07-14T00:00:00.000Z"
+  }
+}

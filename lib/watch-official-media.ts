@@ -11,12 +11,11 @@ export interface WatchOfficialMedia {
   verifiedAt: string;
 }
 
-function modelFromName(value: string) {
-  return value.toUpperCase().match(/\b[A-Z]{1,5}\d{2,5}(?:-\d{2,4}[A-Z0-9]{0,3})+\b/g)?.at(-1);
-}
-
 export function getOfficialWatchMedia(name: string, sourceHint = ""): WatchOfficialMedia | null {
-  const model = modelFromName(sourceHint) || modelFromName(name);
+  const haystack = `${sourceHint} ${name}`.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const model = Object.keys(officialMedia).find((key) =>
+    haystack.includes(key.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+  );
   if (!model) return null;
   const item = (officialMedia as Record<string, WatchOfficialMedia>)[model];
   return item?.model === model ? item : null;

@@ -6,6 +6,8 @@ import { useCart } from "./CartProvider";
 
 const money = (value: number, currency: "USD" | "PEN") =>
   new Intl.NumberFormat("es-PE", { style: "currency", currency }).format(value);
+const productLabel = (brand: string, name: string) =>
+  name.toLocaleLowerCase().startsWith(brand.toLocaleLowerCase()) ? name : `${brand} ${name}`;
 
 export default function CartPageClient({ rate }: { rate: number }) {
   const { items, totalUsd, setQuantity, remove, ready } = useCart();
@@ -15,7 +17,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
     return (
       <section className="container-shell py-24 text-center">
         <p className="eyebrow">Tu selección</p>
-        <h1 className="mt-4 font-serif text-5xl text-content">La bolsa está vacía.</h1>
+        <h1 className="mt-4 font-serif text-[2.65rem] text-content sm:text-5xl">La bolsa está vacía.</h1>
         <p className="mx-auto mt-4 max-w-lg text-lg text-muted">
           Guarda las piezas que te interesan y finaliza el pedido con un resumen en PDF.
         </p>
@@ -27,7 +29,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
   return (
     <div className="container-shell py-12 sm:py-16">
       <p className="eyebrow">Tu selección</p>
-      <h1 className="mt-3 font-serif text-5xl text-content sm:text-6xl">Bolsa de compra</h1>
+      <h1 className="mt-3 font-serif text-[2.65rem] text-content sm:text-6xl">Bolsa de compra</h1>
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="space-y-4">
           {items.map((item) => (
@@ -38,7 +40,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
               <div className="flex min-w-0 flex-col sm:flex-row sm:justify-between sm:gap-5">
                 <div>
                   <p className="eyebrow">{item.brand}</p>
-                  <Link href={`/producto/${item.id}`} className="mt-1 line-clamp-2 font-serif text-xl text-content hover:text-accent sm:text-2xl">{item.name}</Link>
+                  <Link href={`/producto/${item.id}`} className="mt-1 line-clamp-2 font-serif text-xl text-content hover:text-accent sm:text-2xl">{productLabel(item.brand, item.name)}</Link>
                   <p className="mt-2 text-sm text-muted">{money(item.finalPriceUsd, "USD")} · {money(item.finalPriceUsd * rate, "PEN")}</p>
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-3 sm:mt-0 sm:flex-col sm:items-end">
@@ -54,7 +56,7 @@ export default function CartPageClient({ rate }: { rate: number }) {
           ))}
         </div>
 
-        <aside className="sticky top-36 rounded-[28px] border border-line bg-surface p-6 shadow-soft">
+        <aside className="rounded-[28px] border border-line bg-surface p-6 shadow-soft lg:sticky lg:top-36">
           <p className="eyebrow">Resumen</p>
           <div className="mt-5 space-y-3 border-b border-line pb-5 text-base">
             <div className="flex justify-between text-muted"><span>Productos</span><span>{money(totalUsd, "USD")}</span></div>

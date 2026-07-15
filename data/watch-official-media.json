@@ -16,5 +16,70 @@
     "technicalImage": "https://citizenwatch.widen.net/content/jvismgwj2e/webp/Detalles+clave+de+TSUYOSA.webp?u=41zuoe&width=1600&height=900&quality=100&crop=true&keep=c&color=FFFFFF",
     "videoUrl": null,
     "verifiedAt": "2026-07-14T00:00:00.000Z"
+  },
+  "SPB117J1": {
+    "brand": "Seiko",
+    "model": "SPB117J1",
+    "title": "SPB117J1",
+    "officialUrl": "https://www.seikowatches.com/global-en/products/prospex/spb117j1",
+    "images": [
+      "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/00/45/SPB117J1/SPB117J1.png"
+    ],
+    "technicalImage": null,
+    "videoUrl": null,
+    "verifiedAt": "2026-07-15T02:10:09.934Z"
+  },
+  "SRE017J1": {
+    "brand": "Seiko",
+    "model": "SRE017J1",
+    "title": "SRE017J1",
+    "officialUrl": "https://www.seikowatches.com/global-en/products/presage/sre017j1",
+    "images": [
+      "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2025/08/15/21/11/SRE017J1/SRE017J1.png"
+    ],
+    "technicalImage": null,
+    "videoUrl": null,
+    "verifiedAt": "2026-07-15T02:10:10.092Z"
+  },
+  "SSC965": {
+    "brand": "Seiko",
+    "model": "SSC965",
+    "title": "SSC965",
+    "officialUrl": "https://www.seikowatches.com/global-en/products/prospex/ssc965",
+    "images": [
+      "https://www.seikowatches.com/global-en/-/media/Images/GlobalEn/Seiko/Home/products/prospex/product_detail/SPEEDTIMER_260202/SSC965P1_01_1x1.jpg?mh=630&mw=1120&hash=2ECFFDA99B48221B3D447422FEE39171"
+    ],
+    "technicalImage": null,
+    "videoUrl": null,
+    "verifiedAt": "2026-07-15T02:10:10.708Z"
+  },
+  "SPB249J1": {
+    "brand": "Seiko",
+    "model": "SPB249J1",
+    "title": "SPB249J1",
+    "officialUrl": "https://www.seikowatches.com/global-en/products/prospex/spb249j1",
+    "images": [
+      "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/01/05/SPB249J1/SPB249J1.png"
+    ],
+    "technicalImage": null,
+    "videoUrl": null,
+    "verifiedAt": "2026-07-15T02:10:11.441Z"
+  },
+  "T1370101135100": {
+    "brand": "Tissot",
+    "model": "T1370101135100",
+    "title": "T1370101135100",
+    "officialUrl": "https://www.tissotwatches.com/en-us/T1370101135100.html",
+    "images": [
+      "https://www.tissotwatches.com/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwa1811358/product-pictures/cd5ea060-a074-4f11-adbc-088349474fa6_T137-010-11-351-00_Shadow.png?sm=fit&sw=1600&sh=1600",
+      "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwa1811358/product-pictures/cd5ea060-a074-4f11-adbc-088349474fa6_T137-010-11-351-00_Shadow.png?sm=fit&sw=1600&sh=1600",
+      "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw28bbf630/product-pictures/9e019e7f-634c-4f74-a830-94edd7a4eacd_T137-010-11-351-00_PROFIL.png?sm=fit&sw=1600&sh=1600",
+      "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw8f878ed5/product-pictures/9cac7e41-56fd-4c59-89ea-89be96f4c016_T137-010-11-351-00_B1.png?sm=fit&sw=1600&sh=1600",
+      "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw8b4c759d/product-pictures/cbddafa6-0cf4-4d52-bf00-72b430a89544_T137-010-11-351-00_WRIST.png?sm=fit&sw=1600&sh=1600",
+      "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw5fe7ee5b/product-pictures/b0b2d1aa-ac30-46ba-a3e4-fba4904bef23_T137-010-11-351-00.png?sm=fit&sw=1600&sh=1600"
+    ],
+    "technicalImage": null,
+    "videoUrl": null,
+    "verifiedAt": "2026-07-15T02:10:15.674Z"
   }
 }

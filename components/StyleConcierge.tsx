@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 const GENDERS = [
   { value: "men", label: "Él" },
   { value: "women", label: "Ella" },
-  { value: "all", label: "Ver todo" }
+  { value: "all", label: "Todo" }
 ];
 
 const TYPES = [
@@ -73,14 +73,14 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
   };
 
   const bigBtn = (active: boolean) =>
-    `rounded-2xl border px-5 py-4 font-serif text-xl transition-all duration-300 sm:text-2xl ${
+    `min-h-14 min-w-0 rounded-2xl border px-1.5 py-3 font-serif text-base leading-tight transition-all duration-300 min-[390px]:px-3 min-[390px]:text-lg sm:px-5 sm:py-4 sm:text-2xl ${
       active
         ? "border-accent bg-accent text-accent-fg shadow-lift"
         : "border-line bg-bg text-content hover:-translate-y-0.5 hover:border-accent hover:shadow-lift"
     }`;
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-line bg-surface shadow-lift">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-line bg-surface shadow-lift">
       {/* progreso */}
       <div className="flex items-center justify-between px-6 pt-6 sm:px-8">
         <div className="flex gap-2">
@@ -104,15 +104,15 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
       </div>
 
       {/* pasos (carril deslizante) */}
-      <div className="relative">
+      <div className="relative min-w-0 overflow-hidden">
         <div
-          className="flex transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="flex w-full min-w-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ transform: `translateX(-${step * 100}%)` }}
         >
           {/* 1 · ¿Para quién? */}
-          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 0}>
-            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[0]}</h2>
-            <div className="mt-6 grid grid-cols-3 gap-3">
+          <section className="w-full min-w-0 shrink-0 p-5 sm:p-8" aria-hidden={step !== 0}>
+            <h2 className="font-serif text-[1.75rem] text-content sm:text-4xl">{STEPS[0]}</h2>
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
               {GENDERS.map((o) => (
                 <button key={o.value} type="button" disabled={step !== 0} onClick={() => pick(setGender)(o.value)} className={bigBtn(gender === o.value)}>
                   {o.label}
@@ -122,8 +122,8 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
           </section>
 
           {/* 2 · ¿Qué buscas? */}
-          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 1}>
-            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[1]}</h2>
+          <section className="w-full min-w-0 shrink-0 p-5 sm:p-8" aria-hidden={step !== 1}>
+            <h2 className="font-serif text-[1.75rem] text-content sm:text-4xl">{STEPS[1]}</h2>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {TYPES.map((o) => (
                 <button key={o.value} type="button" disabled={step !== 1} onClick={() => pick(setType)(o.value)} className={bigBtn(type === o.value)}>
@@ -134,8 +134,8 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
           </section>
 
           {/* 3 · ¿La ocasión? */}
-          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 2}>
-            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[2]}</h2>
+          <section className="w-full min-w-0 shrink-0 p-5 sm:p-8" aria-hidden={step !== 2}>
+            <h2 className="font-serif text-[1.75rem] text-content sm:text-4xl">{STEPS[2]}</h2>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               {OCCASIONS.map((o) => (
                 <button key={o.value} type="button" disabled={step !== 2} onClick={() => pick(setOccasion)(o.value)} className={bigBtn(occasion === o.value)}>
@@ -146,8 +146,8 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
           </section>
 
           {/* 4 · ¿Una casa favorita? */}
-          <section className="w-full shrink-0 p-6 sm:p-8" aria-hidden={step !== 3}>
-            <h2 className="font-serif text-3xl text-content sm:text-4xl">{STEPS[3]}</h2>
+          <section className="w-full min-w-0 shrink-0 p-5 sm:p-8" aria-hidden={step !== 3}>
+            <h2 className="font-serif text-[1.75rem] text-content sm:text-4xl">{STEPS[3]}</h2>
             <select
               value={brand}
               onChange={(e) => setBrand(e.target.value)}

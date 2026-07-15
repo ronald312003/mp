@@ -7,7 +7,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
   const images = useMemo(() => [...new Set(srcs.filter(Boolean))], [srcs]);
   const [idx, setIdx] = useState(0);
   const [zoomed, setZoomed] = useState(false);
-  const [detail, setDetail] = useState(false);
+  const [view, setView] = useState<"full" | "detail" | "finish">("full");
   const current = images[Math.min(idx, images.length - 1)] ?? images[0];
 
   const move = (delta: number) => {
@@ -33,7 +33,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
   if (!current) return null;
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <div className="relative aspect-square overflow-hidden rounded-editorial bg-surface ring-1 ring-line">
         <button
           type="button"
@@ -47,12 +47,18 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
           alt={`${alt}, vista ${idx + 1}`}
           fill
           sizes="(max-width:1024px) 100vw, 50vw"
-          className={`object-contain p-6 transition-transform duration-700 sm:p-10 ${detail ? "scale-[1.65]" : "scale-100"}`}
+          className={`object-contain p-5 transition-[transform,transform-origin] duration-700 sm:p-10 ${
+            view === "detail"
+              ? "origin-center scale-[1.62]"
+              : view === "finish"
+                ? "origin-[62%_38%] scale-[2.15]"
+                : "origin-center scale-100"
+          }`}
           priority
         />
 
         <span className="absolute left-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
-          Vista {idx + 1} de {images.length}
+          {images.length > 1 ? `Vista ${idx + 1} de ${images.length}` : "Imagen verificada"}
         </span>
         <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-full bg-bg/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-muted backdrop-blur">
           Ampliar
@@ -81,7 +87,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
       </div>
 
       {images.length > 1 && (
-        <div className="mt-3 grid grid-cols-6 gap-2" role="tablist" aria-label="Vistas del producto">
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-6" role="tablist" aria-label="Vistas del producto">
           {images.map((src, imageIndex) => (
             <button
               key={`${src}-${imageIndex}`}
@@ -90,7 +96,7 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
               role="tab"
               aria-selected={imageIndex === idx}
               aria-label={`Mostrar vista ${imageIndex + 1}`}
-              className={`relative aspect-square overflow-hidden rounded-md bg-surface2 ring-1 transition ${
+              className={`relative aspect-square w-16 shrink-0 overflow-hidden rounded-xl bg-surface2 ring-1 transition sm:w-auto ${
                 imageIndex === idx ? "ring-accent" : "ring-line opacity-70 hover:opacity-100"
               }`}
             >
@@ -101,11 +107,24 @@ export default function ProductGallery({ srcs, alt }: { srcs: string[]; alt: str
       )}
 
       {images.length === 1 && (
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-line bg-surface p-2">
-          <p className="pl-3 text-sm text-muted">Inspecciona la pieza sin mezclar otra variante.</p>
-          <div className="flex rounded-xl bg-surface2 p-1">
-            <button type="button" onClick={() => setDetail(false)} aria-pressed={!detail} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${!detail ? "bg-bg text-content shadow-soft" : "text-muted"}`}>Completa</button>
-            <button type="button" onClick={() => setDetail(true)} aria-pressed={detail} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${detail ? "bg-bg text-content shadow-soft" : "text-muted"}`}>Detalle</button>
+        <div className="mt-3 min-w-0 max-w-full overflow-hidden rounded-2xl border border-line bg-surface p-2 sm:flex sm:items-center sm:justify-between">
+          <p className="min-w-0 break-words px-2 pb-2 text-sm leading-snug text-muted sm:pb-0">Tres acercamientos de la misma foto verificada; nunca mezclamos otra variante.</p>
+          <div className="grid min-w-0 grid-cols-3 rounded-xl bg-surface2 p-1 sm:flex">
+            {([
+              ["full", "Completa"],
+              ["detail", "Detalle"],
+              ["finish", "Acabado"]
+            ] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setView(mode)}
+                aria-pressed={view === mode}
+                className={`min-h-11 min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition min-[390px]:px-3 min-[390px]:text-xs ${view === mode ? "bg-bg text-content shadow-soft" : "text-muted"}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       )}

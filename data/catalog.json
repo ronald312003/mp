@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-15T01:08:27.031Z",
+  "generatedAt": "2026-07-15T02:10:16.606Z",
   "exchange": {
     "rate": 3.51,
     "sell": 3.408,
@@ -1605,7 +1605,7 @@
       "type": "perfume",
       "gender": "men",
       "description": "Ámbar oscuro y presencia intensa para una firma masculina con carácter nocturno.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/g/u/gucci-mens-guilty-absolu-de-perfume-parfum-203-oz-fragrances-3616305931160.jpg",
+      "imageUrl": "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1750840203/829671_99999_0099_001_100_0000_Light-gucci-guilty-absolu-de-parfum-pour-homme-60ml.jpg",
       "sourceUrl": "https://www.jomashop.com/gucci-mens-guilty-absolu-de-perfume-parfum-2-03-oz-fragrances-3616305931160.html",
       "basePriceUsd": 128.24,
       "finalPriceUsd": 190.99,
@@ -1616,6 +1616,8 @@
       "stylingNote": "Combínalo con reloj de acero negro, camisa azul noche y zapatos derby café oscuro.",
       "inspirationImage": "https://i.pinimg.com/736x/9c/c9/9e/9cc99e4d47d858740c6c2d87943c8511--dinner-jackets-wedding-tuxedos.jpg",
       "images": [
+        "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1750840203/829671_99999_0099_001_100_0000_Light-gucci-guilty-absolu-de-parfum-pour-homme-60ml.jpg",
+        "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1750840205/829671_99999_0099_002_100_0000_Light-gucci-guilty-absolu-de-parfum-pour-homme-60ml.jpg",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/g/u/gucci-mens-guilty-absolu-de-perfume-parfum-203-oz-fragrances-3616305931160.jpg"
       ],
       "recoIds": [
@@ -13656,7 +13658,7 @@
       "type": "watch",
       "gender": "women",
       "description": "Trazos finos y esfera hielo, un reloj femenino de elegancia fresca y precisa.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/t/i/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100.jpg",
+      "imageUrl": "https://www.tissotwatches.com/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwa1811358/product-pictures/cd5ea060-a074-4f11-adbc-088349474fa6_T137-010-11-351-00_Shadow.png?sm=fit&sw=1600&sh=1600",
       "sourceUrl": "https://www.jomashop.com/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100.html",
       "basePriceUsd": 249.38,
       "finalPriceUsd": 345.99,
@@ -13667,9 +13669,13 @@
       "stylingNote": "Combínalo con blazer crema, pantalón recto, pumps nude y perfume floral limpio para un conjunto pulido.",
       "inspirationImage": "https://i.pinimg.com/736x/0e/f0/b8/0ef0b8d68a3710f2552bdd114aa5e043.jpg",
       "images": [
-        "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/t/i/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100.jpg",
-        "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/t/i/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100_2.jpg",
-        "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/t/i/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100_3.jpg"
+        "https://www.tissotwatches.com/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwa1811358/product-pictures/cd5ea060-a074-4f11-adbc-088349474fa6_T137-010-11-351-00_Shadow.png?sm=fit&sw=1600&sh=1600",
+        "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dwa1811358/product-pictures/cd5ea060-a074-4f11-adbc-088349474fa6_T137-010-11-351-00_Shadow.png?sm=fit&sw=1600&sh=1600",
+        "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw28bbf630/product-pictures/9e019e7f-634c-4f74-a830-94edd7a4eacd_T137-010-11-351-00_PROFIL.png?sm=fit&sw=1600&sh=1600",
+        "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw8f878ed5/product-pictures/9cac7e41-56fd-4c59-89ea-89be96f4c016_T137-010-11-351-00_B1.png?sm=fit&sw=1600&sh=1600",
+        "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw8b4c759d/product-pictures/cbddafa6-0cf4-4d52-bf00-72b430a89544_T137-010-11-351-00_WRIST.png?sm=fit&sw=1600&sh=1600",
+        "https://www.tissotwatches.com/dw/image/v2/BKKD_PRD/on/demandware.static/-/Sites-Tissot-Catalogue/default/dw5fe7ee5b/product-pictures/b0b2d1aa-ac30-46ba-a3e4-fba4904bef23_T137-010-11-351-00.png?sm=fit&sw=1600&sh=1600",
+        "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/t/i/tissot-prx-quartz-ice-blue-ladies-watch-t1370101135100.jpg"
       ],
       "recoIds": [
         "mp-d04ffafba9a6",
@@ -15932,7 +15938,7 @@
       "type": "perfume",
       "gender": "unisex",
       "description": "Vainilla con matiz florentino, cálida y envolvente, deja una estela sofisticada y serena.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/g/u/gucci-vanilla-firenze-edp-spray-34-oz-fragrances-3616305261823.jpg",
+      "imageUrl": "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1733212812/801718_99999_0099_001_100_0000_Light-the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum.jpg",
       "sourceUrl": "https://www.jomashop.com/gucci-vanilla-firenze-edp-spray-3-4-oz-fragrances-3616305261823.html",
       "basePriceUsd": 269.99,
       "finalPriceUsd": 370.99,
@@ -15943,6 +15949,8 @@
       "stylingNote": "Úsalo con reloj de vestir, blazer negro y zapatos de cuero; elige tonos crema, tabaco o burdeos.",
       "inspirationImage": "https://storage.googleapis.com/windsor-cms/media/2023/10/8c9595cf-what-to-wear-to-a-black-tie-16-dresses-hero-1.jpg",
       "images": [
+        "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1733212812/801718_99999_0099_001_100_0000_Light-the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum.jpg",
+        "https://media.gucci.com/style/DarkGray_Center_0_0_1200x1200/1733212813/801718_99999_0099_002_100_0000_Light-the-alchemists-garden-vanilla-firenze-100ml-eau-de-parfum.jpg",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/g/u/gucci-vanilla-firenze-edp-spray-34-oz-fragrances-3616305261823.jpg"
       ],
       "recoIds": [
@@ -16906,7 +16914,7 @@
       "type": "perfume",
       "gender": "women",
       "description": "Oud real con matiz femenino, profundo y suntuoso sin exceso.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/c/r/creed-ladies-creed-royal-princess-oud-edp-spray-25-oz-fragrances-871854102642.jpg",
+      "imageUrl": "https://creedboutique.com/cdn/shop/files/1500x1500_Royal-Princess-Oud_75ml.jpg?v=1740695961&width=1600",
       "sourceUrl": "https://www.jomashop.com/creed-ladies-creed-royal-princess-oud-edp-spray-2-5-oz-fragrances-871854102642.html",
       "basePriceUsd": 279.99,
       "finalPriceUsd": 383.99,
@@ -16918,6 +16926,8 @@
       "stylingNote": "Llévalo con reloj dorado discreto, vestido negro, sandalias altas y joyería mínima pulida.",
       "inspirationImage": "https://mytrendboutique.com/wp-content/uploads/2024/12/0_0_640_N-2-229.webp",
       "images": [
+        "https://creedboutique.com/cdn/shop/files/1500x1500_Royal-Princess-Oud_75ml.jpg?v=1740695961&width=1600",
+        "https://creedboutique.com/cdn/shop/files/1500x1500_RPO-Notes_1.jpg?v=1764095747&width=1600",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/c/r/creed-ladies-creed-royal-princess-oud-edp-spray-25-oz-fragrances-871854102642.jpg"
       ],
       "recoIds": [
@@ -19646,7 +19656,7 @@
       "type": "perfume",
       "gender": "unisex",
       "description": "Ámbar, oud y especias: una composición intensa con presencia envolvente.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/x/e/xerjoff-unisex-oud-stars-alexandria-ii-edp-spray-34-oz-100-ml-8033488154967_1.jpg",
+      "imageUrl": "https://www.xerjoff.com/cdn/shop/files/gallery-xerjoff-alexandriaII-still.jpg?v=1749809880&width=1946",
       "sourceUrl": "https://www.jomashop.com/xerjoff-unisex-alexandria-ii-edp-spray-3-4-oz-fragrances-8033488154967.html",
       "basePriceUsd": 308.74,
       "finalPriceUsd": 418.99,
@@ -19658,6 +19668,8 @@
       "stylingNote": "Úsalo con reloj dorado discreto, sastrería negra, cuero liso y tonos tabaco para una elegancia sobria.",
       "inspirationImage": "https://storage.googleapis.com/windsor-cms/media/2023/10/8c9595cf-what-to-wear-to-a-black-tie-16-dresses-hero-1.jpg",
       "images": [
+        "https://www.xerjoff.com/cdn/shop/files/gallery-xerjoff-alexandriaII-still.jpg?v=1749809880&width=1946",
+        "https://www.xerjoff.com/cdn/shop/files/gallery-xerjoff-alexandriaII-eau-de-parfum-100ml.png?v=1749810026&width=1946",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/x/e/xerjoff-unisex-oud-stars-alexandria-ii-edp-spray-34-oz-100-ml-8033488154967_1.jpg"
       ],
       "recoIds": [
@@ -27468,7 +27480,7 @@
       "type": "watch",
       "gender": "women",
       "description": "Presage plateado con lectura limpia y refinamiento discreto para cada día.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-presage-automatic-silver-dial-ladies-watch-sre017j1.jpg",
+      "imageUrl": "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2025/08/15/21/11/SRE017J1/SRE017J1.png",
       "sourceUrl": "https://www.jomashop.com/seiko-presage-automatic-silver-dial-ladies-watch-sre017j1.html",
       "basePriceUsd": 450,
       "finalPriceUsd": 592.99,
@@ -27480,6 +27492,7 @@
       "stylingNote": "Úsalo con reloj fino, vestido sastre crema y tacones nude; perfume floral almizclado y joyería mínima.",
       "inspirationImage": "https://i.pinimg.com/474x/73/33/c8/7333c84fbb67f02ab7952632f09e6933--womens-business-clothes-business-outfits-women.jpg",
       "images": [
+        "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2025/08/15/21/11/SRE017J1/SRE017J1.png",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-presage-automatic-silver-dial-ladies-watch-sre017j1.jpg"
       ],
       "recoIds": [
@@ -33196,7 +33209,7 @@
       "type": "watch",
       "gender": "men",
       "description": "Cronógrafo azul de aire náutico, práctico y limpio para una rutina con estilo.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-chronograph-quartz-blue-dial-mens-watch-ssc965.jpg",
+      "imageUrl": "https://www.seikowatches.com/global-en/-/media/Images/GlobalEn/Seiko/Home/products/prospex/product_detail/SPEEDTIMER_260202/SSC965P1_01_1x1.jpg?mh=630&mw=1120&hash=2ECFFDA99B48221B3D447422FEE39171",
       "sourceUrl": "https://www.jomashop.com/seiko-prospex-chronograph-quartz-blue-dial-mens-watch-ssc965.html",
       "basePriceUsd": 649.99,
       "finalPriceUsd": 839.99,
@@ -33208,6 +33221,7 @@
       "stylingNote": "Con reloj ya definido; camisa celeste, denim oscuro y sneakers blancas o mocasines de gamuza.",
       "inspirationImage": "https://i.pinimg.com/736x/0f/73/be/0f73bec64253c0c4979af81f915fd53c--mens-sportswear-male-fashion.jpg?b=t",
       "images": [
+        "https://www.seikowatches.com/global-en/-/media/Images/GlobalEn/Seiko/Home/products/prospex/product_detail/SPEEDTIMER_260202/SSC965P1_01_1x1.jpg?mh=630&mw=1120&hash=2ECFFDA99B48221B3D447422FEE39171",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-chronograph-quartz-blue-dial-mens-watch-ssc965.jpg"
       ],
       "recoIds": [
@@ -33671,7 +33685,7 @@
       "type": "watch",
       "gender": "men",
       "description": "Un diver japonés de líneas limpias, pensado para aventura con discreción elegante.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-automatic-black-dial-mens-watch-spb117j1.jpg",
+      "imageUrl": "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/00/45/SPB117J1/SPB117J1.png",
       "sourceUrl": "https://www.jomashop.com/seiko-prospex-automatic-black-dial-mens-watch-spb117j1.html",
       "basePriceUsd": 669.99,
       "finalPriceUsd": 864.99,
@@ -33682,6 +33696,7 @@
       "stylingNote": "Combínelo con camiseta blanca, sobrecamisa oliva y botas safari; perfume verde y amaderado.",
       "inspirationImage": "https://i.pinimg.com/736x/0f/73/be/0f73bec64253c0c4979af81f915fd53c--mens-sportswear-male-fashion.jpg?b=t",
       "images": [
+        "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/00/45/SPB117J1/SPB117J1.png",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-automatic-black-dial-mens-watch-spb117j1.jpg"
       ],
       "recoIds": [
@@ -33779,7 +33794,7 @@
       "type": "watch",
       "gender": "men",
       "description": "Esfera azul y construcción resistente para un estilo activo, preciso y sobrio.",
-      "imageUrl": "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-land-automatic-blue-dial-mens-watch-spb249j1.jpg",
+      "imageUrl": "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/01/05/SPB249J1/SPB249J1.png",
       "sourceUrl": "https://www.jomashop.com/seiko-prospex-land-automatic-blue-dial-mens-watch-spb249j1.html",
       "basePriceUsd": 675,
       "finalPriceUsd": 870.99,
@@ -33790,6 +33805,7 @@
       "stylingNote": "Combínelo con parka ligera, pantalón cargo oscuro y botas trekking; perfume fresco especiado.",
       "inspirationImage": "https://i.pinimg.com/736x/0f/73/be/0f73bec64253c0c4979af81f915fd53c--mens-sportswear-male-fashion.jpg?b=t",
       "images": [
+        "https://www.seikowatches.com/global-en/-/media/Images/Product--Image/All/Seiko/2022/02/20/01/05/SPB249J1/SPB249J1.png",
         "https://cdn2.jomashop.com/media/catalog/product/cache/bb8fda0b339dbe7c4b0b03f372ea5c01/s/e/seiko-prospex-land-automatic-blue-dial-mens-watch-spb249j1.jpg"
       ],
       "recoIds": [
