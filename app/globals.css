@@ -10,8 +10,8 @@
   --c-border: 226 210 192;
   --c-text: 62 48 37;          /* cacao, menos oscuro */
   --c-muted: 119 98 79;
-  --c-accent: 177 137 96;      /* caramelo claro */
-  --c-accent-strong: 151 112 75;
+  --c-accent: 200 160 120;     /* marrón más claro */
+  --c-accent-strong: 175 140 105;
   --c-accent-fg: 255 255 255;
   --c-inverse: 93 69 50;
   --c-inverse-fg: 250 246 240;
@@ -25,8 +25,8 @@
   --c-border: 96 80 65;
   --c-text: 250 243 233;
   --c-muted: 207 188 166;
-  --c-accent: 222 187 145;
-  --c-accent-strong: 235 205 169;
+  --c-accent: 235 200 160;     /* marrón más claro en oscuro */
+  --c-accent-strong: 245 215 175;
   --c-accent-fg: 26 20 15;
   --c-inverse: 237 229 218;    /* botones claros en oscuro */
   --c-inverse-fg: 30 24 19;
@@ -43,7 +43,7 @@ body {
   @apply bg-bg text-content font-sans antialiased;
   max-width: 100%;
   overflow-x: hidden;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 17px;
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;

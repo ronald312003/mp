@@ -143,30 +143,75 @@ export default function CheckoutForm({ rate }: { rate: number }) {
 
   return (
     <div className="container-shell py-12 sm:py-16">
-      <p className="eyebrow">Checkout privado</p>
-      <h1 className="mt-3 max-w-3xl font-serif text-[2.6rem] leading-none text-content sm:text-6xl">Datos de entrega y confirmación.</h1>
-      <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Al finalizar se descargará tu PDF y, un instante después, se abrirá WhatsApp con el pedido listo. Adjunta allí el archivo recién descargado.</p>
+      <div className="mb-8 flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2 text-muted">
+          <span>Bolsa</span>
+          <span className="text-line">›</span>
+        </div>
+        <div className="flex items-center gap-2 text-content font-medium">
+          <span>Datos de entrega</span>
+          <span className="text-line">›</span>
+        </div>
+        <span className="text-muted">Confirmación</span>
+      </div>
+      <p className="eyebrow">Confirmación de pedido</p>
+      <h1 className="mt-3 max-w-3xl font-serif text-[2.6rem] leading-none text-content sm:text-6xl">Completa tu información de entrega.</h1>
+      <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Revisaremos tu pedido, confirmaremos el envío por WhatsApp y te enviaremos un PDF con el resumen completo.</p>
 
       <form onSubmit={submit} className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
         <div className="rounded-[28px] border border-line bg-surface p-6 shadow-soft sm:p-8">
           <h2 className="font-serif text-3xl text-content">Contacto y entrega</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <label className="sm:col-span-2"><span className="label">Nombre completo *</span><input name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" /></label>
-            <label><span className="label">WhatsApp *</span><input name="phone" required minLength={9} maxLength={30} inputMode="tel" autoComplete="tel" pattern="[+0-9 ()-]{9,30}" title="Escribe un teléfono válido con código de país" className="field" placeholder="+51 999 999 999" /></label>
-            <label><span className="label">Correo (opcional)</span><input name="email" type="email" maxLength={160} autoComplete="email" className="field" /></label>
-            <label className="sm:col-span-2"><span className="label">Dirección completa *</span><input name="address" required minLength={5} maxLength={220} autoComplete="street-address" className="field" placeholder="Calle, número, interior" /></label>
-            <label><span className="label">Distrito *</span><input name="district" required minLength={2} maxLength={100} autoComplete="address-level3" className="field" /></label>
-            <label><span className="label">Ciudad *</span><input name="city" required minLength={2} maxLength={100} autoComplete="address-level2" defaultValue="Lima" className="field" /></label>
-            <label className="sm:col-span-2"><span className="label">Referencia</span><input name="reference" maxLength={220} className="field" placeholder="Portería, color de puerta, indicaciones" /></label>
-            <label className="sm:col-span-2"><span className="label">Notas del pedido</span><textarea name="notes" maxLength={500} rows={4} className="field resize-none" placeholder="Talla, horario preferido u otra consulta" /></label>
+            <label className="sm:col-span-2">
+              <span className="label">Nombre completo *</span>
+              <input name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" placeholder="Tu nombre aquí" />
+            </label>
+            <label>
+              <span className="label">WhatsApp *</span>
+              <input name="phone" required minLength={9} maxLength={30} inputMode="tel" autoComplete="tel" className="field" placeholder="+51 999 999 999" title="Incluye código de país (ej: +51 para Perú)" />
+            </label>
+            <label>
+              <span className="label">Correo (opcional)</span>
+              <input name="email" type="email" maxLength={160} autoComplete="email" className="field" placeholder="tu@email.com" />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="label">Dirección completa *</span>
+              <input name="address" required minLength={5} maxLength={220} autoComplete="street-address" className="field" placeholder="Av. Ejemplo 123, Dpto. 456" />
+            </label>
+            <label>
+              <span className="label">Distrito *</span>
+              <input name="district" required minLength={2} maxLength={100} autoComplete="address-level3" className="field" placeholder="Ej: Miraflores" />
+            </label>
+            <label>
+              <span className="label">Ciudad *</span>
+              <input name="city" required minLength={2} maxLength={100} autoComplete="address-level2" defaultValue="Lima" className="field" />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="label">Referencia (opcional)</span>
+              <input name="reference" maxLength={220} className="field" placeholder="Portería, color de puerta, indicaciones adicionales" />
+            </label>
+            <label className="sm:col-span-2">
+              <span className="label">Notas del pedido (opcional)</span>
+              <textarea name="notes" maxLength={500} rows={4} className="field resize-none" placeholder="Talla, horario preferido, comentarios especiales" />
+            </label>
           </div>
         </div>
 
         <aside className="rounded-[28px] border border-line bg-surface p-6 shadow-soft lg:sticky lg:top-36">
           <p className="eyebrow">{items.length} {items.length === 1 ? "pieza" : "piezas"}</p>
-          <div className="mt-5 max-h-56 space-y-3 overflow-y-auto pr-1">
+          <div className="mt-5 max-h-72 space-y-3 overflow-y-auto pr-1">
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="line-clamp-2 text-content">{item.quantity}x {productLabel(item.brand, item.name)}</span><span className="shrink-0 text-muted">${(item.finalPriceUsd * item.quantity).toFixed(2)}</span></div>
+              <div key={item.id} className="flex gap-3 rounded-lg bg-surface2 p-3">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-bg">
+                  <img src={item.imageSrc} alt={`${item.brand} ${item.name}`} className="h-full w-full object-contain p-1.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted uppercase tracking-wide">{item.brand}</p>
+                  <p className="line-clamp-1 text-sm font-medium text-content">{item.name}</p>
+                  <p className="mt-1 text-xs text-muted">{item.quantity}x ${item.finalPriceUsd.toFixed(2)}</p>
+                </div>
+                <span className="shrink-0 text-right text-sm font-semibold text-content">${(item.finalPriceUsd * item.quantity).toFixed(2)}</span>
+              </div>
             ))}
           </div>
           <div className="mt-5 border-t border-line pt-5 text-right">

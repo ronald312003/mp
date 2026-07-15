@@ -66,7 +66,7 @@ export default function HomeFilmRoom() {
           </div>
         </div>
 
-        <div className="relative aspect-video min-h-[230px] min-w-0 overflow-hidden bg-black lg:min-h-[620px]">
+        <div className="relative min-w-0 min-h-[230px] overflow-hidden bg-black lg:min-h-0" style={{ aspectRatio: "16 / 9" }}>
           <iframe
             key={film.id}
             src={embed}

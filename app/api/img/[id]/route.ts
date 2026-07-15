@@ -32,10 +32,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   const idx = Number(new URL(req.url).searchParams.get("i") || 0);
   const list = canonicalProductImages(product);
-  const requested = list[Number.isFinite(idx) ? idx : 0] ?? product.imageUrl;
-  const candidates = [...new Set([requested, ...list])]
+
+  // Si el índice solicitado es válido, úsalo. Si no, intenta el siguiente.
+  const startIdx = Number.isFinite(idx) && idx >= 0 ? idx : 0;
+  const candidates = list
+    .slice(startIdx)
+    .concat(list.slice(0, startIdx))
     .filter((url): url is string => Boolean(url) && !String(url).startsWith("/"))
-    .slice(0, 7);
+    .slice(0, 10);
 
   // Intenta sin referer y, si falla, con referer del propio origen (algunos CDN
   // exigen referer para permitir el hotlink).
