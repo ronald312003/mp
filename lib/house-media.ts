@@ -1,193 +1,228 @@
 // ============================================================
-//  Media editorial por casa: piezas icónicas y clips oficiales.
-//  Fuente única para la sección "Iconos" del home (HomeIconReel) y para la
-//  tira de media por casa en /casas (HouseMediaStrip).
-//
-//  - Los videos de YouTube se incrustan con youtube-nocookie (iframe limpio).
-//  - Los de TikTok con el reproductor oficial embed/v2 (también iframe).
-//  - El "poster" es opcional: si existe usamos la miniatura (hotlink estable
-//    de i.ytimg.com); si no, la tarjeta cae a un póster tipográfico con el
-//    color de firma de la casa. Así nunca hay imágenes rotas.
-//  - Cada casa incluye una búsqueda de Pinterest para descubrir más piezas.
+//  Media editorial por casa: clips oficiales + galería Pinterest fija.
+//  - Los clips fueron VERIFICADOS por oEmbed (título/autor reales), para que
+//    la etiqueta de la casa siempre coincida con lo que muestra el video.
+//  - Reproductores "solo video": TikTok player/v1 (sin descripción, música ni
+//    controles) y YouTube nocookie sin controles, ambos en mute+loop para
+//    autoreproducirse como fondo inmersivo.
+//  - La galería de imágenes viene de data/brand-gallery.json, scrapeada de
+//    Pinterest (variantes i.pinimg.com/736x, hotlink estable) y horneada fija
+//    con scripts/scrape-brand-gallery.mjs.
 // ============================================================
 
+import gallery from "@/data/brand-gallery.json";
+
 export type Platform = "youtube" | "tiktok";
+export type Orientation = "landscape" | "portrait";
 
 export interface MediaClip {
   platform: Platform;
   id: string;
+  /** Qué muestra el clip (verificado contra el video real). */
   label: string;
+  orientation: Orientation;
 }
-
-/** Portada tipográfica cuando no hay miniatura: color de firma de la casa. */
-export type Accent = "rouge" | "gold" | "ink";
 
 export interface IconicPiece {
   house: string;
   piece: string;
   signature: string;
-  note: string;
-  accent: Accent;
-  /** Miniatura estable (i.ytimg.com) o undefined para póster tipográfico. */
-  poster?: string;
+  accent: "rouge" | "gold" | "ink";
   clip: MediaClip;
-  pinterest: string;
 }
 
-const yt = (id: string): string => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-export const pinterest = (query: string): string =>
-  `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
+const GALLERY = gallery as Record<string, { query: string; images: string[] }>;
 
-/** Miniatura de la primera portada disponible, si la hay. */
-export function posterFor(piece: IconicPiece): string | undefined {
-  return piece.poster;
+/** Imágenes fijas (scrapeadas de Pinterest) para una marca. */
+export function brandGallery(brand: string, limit = 10): string[] {
+  return (GALLERY[brand]?.images || []).slice(0, limit);
 }
 
-// ---- Piezas icónicas para el muro del home -----------------------------
+export function pinterestSearch(brand: string): string {
+  const query = GALLERY[brand]?.query || `${brand} editorial`;
+  return `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
+}
+
+/** Miniatura estable de YouTube. */
+export function ytPoster(id: string): string {
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}
+
+/**
+ * URL de embed "solo video": sin tarjeta de perfil, descripción ni controles.
+ * Autoplay SIEMPRE en mute (requisito de los navegadores) y en bucle.
+ */
+export function cleanEmbedUrl(clip: MediaClip, autoplay = true): string {
+  if (clip.platform === "youtube") {
+    const auto = autoplay ? 1 : 0;
+    return (
+      `https://www.youtube-nocookie.com/embed/${clip.id}` +
+      `?autoplay=${auto}&mute=1&controls=0&loop=1&playlist=${clip.id}` +
+      `&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0`
+    );
+  }
+  // Reproductor oficial de TikTok (player/v1): permite ocultar TODO el chrome.
+  return (
+    `https://www.tiktok.com/player/v1/${clip.id}` +
+    `?autoplay=${autoplay ? 1 : 0}&loop=1&muted=1&controls=0&progress_bar=0` +
+    `&play_button=0&volume_control=0&fullscreen_button=0&timestamp=0` +
+    `&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0`
+  );
+}
+
+// ---- Piezas icónicas (muro inmersivo del home) --------------------------
+// Cada clip está verificado: autor y contenido reales del video.
 export const ICONIC_PIECES: IconicPiece[] = [
   {
     house: "Christian Louboutin",
-    piece: "So Kate 120",
+    piece: "Molten Trapman",
     signature: "Suela roja lacada",
-    note: "El gesto sin logotipo: una laca escarlata que firma cada paso.",
     accent: "rouge",
-    poster: yt("_U6rF1s3rq8"),
-    clip: { platform: "youtube", id: "_U6rF1s3rq8", label: "La suela roja en movimiento" },
-    pinterest: pinterest("christian louboutin red sole so kate heels")
+    clip: {
+      platform: "youtube",
+      id: "_U6rF1s3rq8",
+      label: "Oficial · Christian Louboutin",
+      orientation: "landscape"
+    }
   },
   {
     house: "Christian Louboutin",
-    piece: "Pigalle",
-    signature: "Punta afilada",
-    note: "La curva que convirtió un tacón en un código reconocible.",
+    piece: "Red Bottoms",
+    signature: "Suela roja",
     accent: "rouge",
-    clip: { platform: "tiktok", id: "7592448069673700639", label: "Editorial · @ld_boutique" },
-    pinterest: pinterest("louboutin pigalle red bottom heels editorial")
+    clip: {
+      platform: "tiktok",
+      id: "7592448069673700639",
+      label: "Editorial · LD Boutique",
+      orientation: "portrait"
+    }
   },
   {
     house: "Saint Laurent",
-    piece: "Opyum",
+    piece: "Tribute",
     signature: "Tacón-logo YSL",
-    note: "El monograma se vuelve estructura: la letra sostiene el zapato.",
-    accent: "gold",
-    poster: yt("dkCccVuYP5w"),
-    clip: { platform: "youtube", id: "dkCccVuYP5w", label: "Saint Laurent en película" },
-    pinterest: pinterest("saint laurent ysl opyum heels")
+    accent: "ink",
+    clip: {
+      platform: "tiktok",
+      id: "7555450103306276118",
+      label: "Tribute Heels · YSL",
+      orientation: "portrait"
+    }
   },
   {
     house: "Saint Laurent",
-    piece: "Le Smoking",
+    piece: "Tacones YSL",
     signature: "Negro Rive Gauche",
-    note: "La modernidad vestida de negro, tal como la fijó la casa.",
     accent: "ink",
-    clip: { platform: "tiktok", id: "7555450103306276118", label: "Lujo silencioso · YSL" },
-    pinterest: pinterest("saint laurent le smoking black heels luxury")
+    clip: {
+      platform: "tiktok",
+      id: "7626932857189059857",
+      label: "Editorial · YSL heels",
+      orientation: "portrait"
+    }
+  },
+  {
+    house: "Tom Ford",
+    piece: "Ombré Leather",
+    signature: "Perfumería privada",
+    accent: "gold",
+    clip: {
+      platform: "youtube",
+      id: "dkCccVuYP5w",
+      label: "Comercial · Ombré Leather",
+      orientation: "landscape"
+    }
+  },
+  {
+    house: "Tom Ford",
+    piece: "Bois Pacifique",
+    signature: "Signature",
+    accent: "gold",
+    clip: {
+      platform: "youtube",
+      id: "DwY0TEQuCl8",
+      label: "Oficial · TOM FORD",
+      orientation: "portrait"
+    }
   },
   {
     house: "Jimmy Choo",
-    piece: "Saeda",
-    signature: "Tira de cristal",
-    note: "Sandalia joya: la luz como acabado del calzado de noche.",
+    piece: "Moza & Max Platforms",
+    signature: "Noche de cristal",
     accent: "gold",
-    clip: { platform: "tiktok", id: "7612690904876584214", label: "Oficial · @jimmychoo" },
-    pinterest: pinterest("jimmy choo crystal sandals heels")
+    clip: {
+      platform: "tiktok",
+      id: "7612690904876584214",
+      label: "Oficial · @jimmychoo",
+      orientation: "portrait"
+    }
   },
   {
     house: "Jimmy Choo",
-    piece: "Bing",
-    signature: "Malla brillante",
-    note: "Una tira envolvente y el destello continuo de la firma británica.",
+    piece: "Holiday Choos",
+    signature: "Brillo de fiesta",
     accent: "gold",
-    clip: { platform: "tiktok", id: "7583357886332538134", label: "Oficial · @jimmychoo" },
-    pinterest: pinterest("jimmy choo bing heels sparkle")
+    clip: {
+      platform: "tiktok",
+      id: "7583357886332538134",
+      label: "Oficial · @jimmychoo",
+      orientation: "portrait"
+    }
   }
 ];
 
-// ---- Media por casa (para /casas) --------------------------------------
+// ---- Media por casa (para /casas) ---------------------------------------
 export interface HouseMedia {
   signature?: string;
   clips: MediaClip[];
-  pinterest: string;
 }
 
 export const HOUSE_MEDIA: Record<string, HouseMedia> = {
   "Christian Louboutin": {
     signature: "Suela roja",
     clips: [
-      { platform: "youtube", id: "_U6rF1s3rq8", label: "La suela roja en movimiento" },
-      { platform: "tiktok", id: "7592448069673700639", label: "Editorial · @ld_boutique" }
-    ],
-    pinterest: pinterest("christian louboutin red sole heels")
+      { platform: "youtube", id: "_U6rF1s3rq8", label: "Oficial · Christian Louboutin", orientation: "landscape" },
+      { platform: "tiktok", id: "7592448069673700639", label: "Editorial · LD Boutique", orientation: "portrait" }
+    ]
   },
   "Saint Laurent": {
     signature: "Negro Rive Gauche",
     clips: [
-      { platform: "youtube", id: "dkCccVuYP5w", label: "Saint Laurent en película" },
-      { platform: "tiktok", id: "7555450103306276118", label: "Lujo silencioso · YSL" },
-      { platform: "tiktok", id: "7626932857189059857", label: "Tacones YSL · 4K" }
-    ],
-    pinterest: pinterest("saint laurent ysl heels editorial")
+      { platform: "tiktok", id: "7555450103306276118", label: "Tribute Heels · YSL", orientation: "portrait" },
+      { platform: "tiktok", id: "7626932857189059857", label: "Editorial · YSL heels", orientation: "portrait" },
+      { platform: "tiktok", id: "7515083469613976840", label: "MYSELF · fragancia YSL", orientation: "portrait" }
+    ]
+  },
+  "Tom Ford": {
+    signature: "Perfumería privada",
+    clips: [
+      { platform: "youtube", id: "dkCccVuYP5w", label: "Comercial · Ombré Leather", orientation: "landscape" },
+      { platform: "youtube", id: "DwY0TEQuCl8", label: "Bois Pacifique · oficial", orientation: "portrait" },
+      { platform: "youtube", id: "FA3EMQ18blU", label: "Tom Ford Lapels", orientation: "portrait" }
+    ]
+  },
+  "Jimmy Choo": {
+    signature: "Noche de cristal",
+    clips: [
+      { platform: "tiktok", id: "7612690904876584214", label: "Oficial · @jimmychoo", orientation: "portrait" },
+      { platform: "tiktok", id: "7583357886332538134", label: "Oficial · @jimmychoo", orientation: "portrait" }
+    ]
   },
   Dior: {
     signature: "New Look",
     clips: [
-      { platform: "youtube", id: "PS78866qStM", label: "Lady Dior · savoir-faire" }
-    ],
-    pinterest: pinterest("dior new look savoir faire editorial")
+      { platform: "youtube", id: "PS78866qStM", label: "Lady Dior · savoir-faire", orientation: "landscape" }
+    ]
   },
-  Valentino: {
-    signature: "Rojo Valentino",
-    clips: [],
-    pinterest: pinterest("valentino red couture editorial")
-  },
-  Versace: {
-    signature: "Barroco Medusa",
-    clips: [],
-    pinterest: pinterest("versace baroque medusa editorial")
-  },
-  Ferragamo: {
-    signature: "Calzado esculpido",
-    clips: [],
-    pinterest: pinterest("ferragamo shoes craftsmanship editorial")
-  },
-  Prada: {
-    signature: "Nylon y triángulo",
-    clips: [],
-    pinterest: pinterest("prada nylon triangle editorial")
-  },
-  "Maison Margiela": {
-    signature: "Tabi",
-    clips: [],
-    pinterest: pinterest("maison margiela tabi editorial")
-  },
-  "Thom Browne": {
-    signature: "Cuatro barras",
-    clips: [],
-    pinterest: pinterest("thom browne grey suit four bars editorial")
-  },
-  Missoni: {
-    signature: "Zigzag",
-    clips: [],
-    pinterest: pinterest("missoni zigzag knit editorial")
-  },
-  Sandro: {
-    signature: "París urbano",
-    clips: [],
-    pinterest: pinterest("sandro paris editorial")
-  },
-  Bally: {
-    signature: "Franja Bally",
-    clips: [],
-    pinterest: pinterest("bally leather shoes editorial")
-  },
-  Dunhill: {
-    signature: "Sastrería inglesa",
-    clips: [],
-    pinterest: pinterest("dunhill tailoring editorial")
-  },
-  "Ralph Lauren": {
-    signature: "Polo · Ivy",
-    clips: [],
-    pinterest: pinterest("ralph lauren polo ivy editorial")
-  }
+  Valentino: { signature: "Rojo Valentino", clips: [] },
+  Versace: { signature: "Barroco Medusa", clips: [] },
+  Ferragamo: { signature: "Calzado esculpido", clips: [] },
+  Prada: { signature: "Nylon y triángulo", clips: [] },
+  "Maison Margiela": { signature: "Tabi", clips: [] },
+  "Thom Browne": { signature: "Cuatro barras", clips: [] },
+  Missoni: { signature: "Zigzag", clips: [] },
+  Sandro: { signature: "París urbano", clips: [] },
+  Bally: { signature: "Franja Bally", clips: [] },
+  Dunhill: { signature: "Sastrería inglesa", clips: [] },
+  "Ralph Lauren": { signature: "Polo · Ivy", clips: [] }
 };

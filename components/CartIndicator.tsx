@@ -16,7 +16,10 @@ export default function CartIndicator() {
         <path d="M9 9V6a3 3 0 0 1 6 0v3" />
       </svg>
       {ready && count > 0 && (
-        <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-fg">
+        <span
+          key={count}
+          className="badge-pop absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rouge px-1 text-[10px] font-bold text-rouge-fg"
+        >
           {count > 99 ? "99+" : count}
         </span>
       )}

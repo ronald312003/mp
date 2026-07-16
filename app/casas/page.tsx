@@ -160,14 +160,11 @@ export default async function FashionHousesPage() {
                       Disponible en {house.types.join(", ")}.
                     </p>
 
-                    {HOUSE_MEDIA[house.name] && (
-                      <HouseMediaStrip
-                        house={house.name}
-                        signature={HOUSE_MEDIA[house.name].signature}
-                        clips={HOUSE_MEDIA[house.name].clips}
-                        pinterest={HOUSE_MEDIA[house.name].pinterest}
-                      />
-                    )}
+                    <HouseMediaStrip
+                      house={house.name}
+                      signature={HOUSE_MEDIA[house.name]?.signature}
+                      clips={HOUSE_MEDIA[house.name]?.clips ?? []}
+                    />
 
                     <div className="mt-auto flex flex-wrap items-center gap-4 pt-6">
                       <Link

@@ -67,22 +67,19 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="container-shell py-12 sm:py-20">
-        <Reveal><HomeFilmRoom /></Reveal>
-      </section>
-
-      <section className="border-t border-line bg-surface py-16 sm:py-24">
+      {/* Banda inmersiva: los iconos en video, ya reproduciéndose */}
+      <section className="bg-[#141110] py-14 text-white sm:py-20">
         <div className="container-shell">
           <Reveal>
-            <p className="eyebrow">
-              Piezas de culto <span className="align-middle text-rouge">●</span>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">
+              Piezas de culto <span className="align-middle text-[#ff5a5a]">●</span> en vivo
             </p>
-            <div className="mt-3 mb-9 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-              <h2 className="max-w-2xl font-serif text-4xl leading-[1.02] text-content sm:text-5xl">
+            <div className="mt-3 mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <h2 className="max-w-2xl font-serif text-4xl leading-[1.02] sm:text-5xl">
                 Iconos que se reconocen sin logotipo.
               </h2>
-              <p className="max-w-xs text-base leading-relaxed text-muted">
-                La suela roja, el tacón-logo, la sandalia de cristal. Toca para ver cada pieza en movimiento.
+              <p className="max-w-xs text-base leading-relaxed text-white/60">
+                La suela roja, el tacón-logo, la sandalia de cristal. Ya en movimiento.
               </p>
             </div>
           </Reveal>
@@ -99,6 +96,10 @@ export default async function Home() {
           </div>
         </Reveal>
         <Reveal delay={80}><HomeHouseReel /></Reveal>
+      </section>
+
+      <section className="container-shell pb-4 sm:pb-8">
+        <Reveal><HomeFilmRoom /></Reveal>
       </section>
 
       <section className="border-t border-line bg-surface py-16 sm:py-24">
