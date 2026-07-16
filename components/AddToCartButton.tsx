@@ -12,18 +12,25 @@ import { useCart, type CartProduct } from "./CartProvider";
  * varias veces seguidas.
  */
 export default function AddToCartButton({ product }: { product: CartProduct }) {
-  const { add } = useCart();
+  const { add, openDrawer } = useCart();
   const router = useRouter();
   const [added, setAdded] = useState(false);
   const timer = useRef<number>();
+  const drawerTimer = useRef<number>();
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  useEffect(() => () => {
+    window.clearTimeout(timer.current);
+    window.clearTimeout(drawerTimer.current);
+  }, []);
 
   const addProduct = () => {
     add(product);
     setAdded(true);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setAdded(false), 2000);
+    // Deja ver el check un instante y abre el mini-carrito lateral.
+    window.clearTimeout(drawerTimer.current);
+    drawerTimer.current = window.setTimeout(openDrawer, 480);
   };
 
   return (

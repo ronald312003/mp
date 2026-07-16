@@ -19,7 +19,8 @@ export default function HouseMediaStrip({
   signature?: string;
   clips: MediaClip[];
 }) {
-  const photos = brandGallery(house, 6);
+  // Solo las 3 principales: una grande + dos de apoyo.
+  const photos = brandGallery(house, 3);
   if (!clips.length && !photos.length) return null;
 
   return (

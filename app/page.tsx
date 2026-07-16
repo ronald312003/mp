@@ -50,7 +50,7 @@ export default async function Home() {
           <div className="min-w-0 max-w-2xl">
             <p className="eyebrow fade-up">Maison Privée · Curaduría personal</p>
             <h1 className="fade-up fade-up-2 mt-5 font-serif text-[2.65rem] leading-[0.98] text-content min-[390px]:text-5xl sm:text-7xl lg:text-[5.5rem]">
-              Encontrar tu próxima pieza debería ser simple.
+              Encontrar tu próxima pieza debería ser <em className="text-accent-strong">simple</em>.
             </h1>
             <p className="fade-up fade-up-3 mt-6 max-w-xl text-xl leading-relaxed text-muted sm:text-2xl">
               Cuatro preguntas. Una selección hecha para ti.
@@ -66,6 +66,22 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Marquee de casas: movimiento constante (easing lineal) */}
+      <div className="marquee overflow-hidden border-b border-line bg-surface py-4" aria-hidden>
+        <div className="marquee-track gap-12 pr-12">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0 items-center gap-12">
+              {["Christian Louboutin", "Saint Laurent", "Tom Ford", "Dior", "Prada", "Valentino", "Versace", "Jimmy Choo", "Ferragamo", "Maison Margiela", "Thom Browne", "Ralph Lauren"].map((name) => (
+                <span key={name} className="flex items-center gap-12 whitespace-nowrap font-serif text-lg italic text-muted">
+                  {name}
+                  <span className="h-1 w-1 rounded-full bg-accent" />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Banda inmersiva: los iconos en video, ya reproduciéndose */}
       <section className="bg-[#141110] py-14 text-white sm:py-20">

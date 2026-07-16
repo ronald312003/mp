@@ -174,17 +174,21 @@ body {
 /* Superficie de cristal con tinte translúcido, difuminado del fondo y brillo
    especular en el borde. Consciente del tema. La refracción real del backdrop
    (feDisplacementMap) se activa sólo donde el navegador la soporta. */
-.liquid-glass {
-  position: relative;
-  isolation: isolate;
-  background: rgb(var(--c-surface) / 0.55);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  backdrop-filter: blur(16px) saturate(1.6);
-  border: 1px solid rgb(255 255 255 / 0.4);
-  box-shadow:
-    0 10px 40px -12px rgb(83 61 42 / 0.28),
-    inset 0 1px 1px rgb(255 255 255 / 0.65),
-    inset 0 -8px 24px -14px rgb(255 255 255 / 0.35);
+/* En @layer components para que las utilities de posición de Tailwind
+   (absolute, fixed…) SIEMPRE puedan ganar a este position: relative. */
+@layer components {
+  .liquid-glass {
+    position: relative;
+    isolation: isolate;
+    background: rgb(var(--c-surface) / 0.55);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
+    border: 1px solid rgb(255 255 255 / 0.4);
+    box-shadow:
+      0 10px 40px -12px rgb(83 61 42 / 0.28),
+      inset 0 1px 1px rgb(255 255 255 / 0.65),
+      inset 0 -8px 24px -14px rgb(255 255 255 / 0.35);
+  }
 }
 .dark .liquid-glass {
   background: rgb(var(--c-surface) / 0.42);
@@ -450,6 +454,41 @@ body {
   .cart-row, .addcart-overlay, .addcart-label { transition: none; }
   .qty-pop, .badge-pop, .is-on .addcart-check { animation: none; }
   .addcart-check { stroke-dashoffset: 0; }
+}
+
+/* Items del mini-carrito y de la búsqueda: entrada con stagger corto. */
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.minicart-item { animation: itemIn 320ms var(--ease-out) both; }
+.search-item { animation: itemIn 260ms var(--ease-out) both; }
+
+/* Desplegables (Ocasiones): pop origin-aware desde el trigger. */
+@keyframes dropdownPop {
+  from { opacity: 0; transform: translateX(-50%) scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+}
+.dropdown-pop {
+  transform-origin: top center;
+  animation: dropdownPop 200ms var(--ease-out) both;
+}
+
+/* Marquee de casas (movimiento constante → easing lineal, guía de Emil). */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .minicart-item, .search-item, .dropdown-pop { animation: none; }
+  .marquee-track { animation: none; }
 }
 
 /* ===== Visor 3D de relojes (anatomía animada) ===== */

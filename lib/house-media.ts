@@ -31,11 +31,26 @@ export interface IconicPiece {
   clip: MediaClip;
 }
 
-const GALLERY = gallery as Record<string, { query: string; images: string[] }>;
+const GALLERY = gallery as Record<string, { query: string; images: string[]; hero?: string }>;
 
 /** Imágenes fijas (scrapeadas de Pinterest) para una marca. */
 export function brandGallery(brand: string, limit = 10): string[] {
   return (GALLERY[brand]?.images || []).slice(0, limit);
+}
+
+/** Imagen hero "luxury" de la casa (boutique/campaña, 1200px) o undefined. */
+export function brandHero(brand: string): string | undefined {
+  return GALLERY[brand]?.hero;
+}
+
+/** Slug estable de una casa para /casas/[slug]. */
+export function houseSlug(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 export function pinterestSearch(brand: string): string {

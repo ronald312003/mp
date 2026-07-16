@@ -6,7 +6,7 @@ import { getCatalog } from "@/lib/data";
 import { FASHION_HOUSES } from "@/lib/fashion-houses";
 import type { Product } from "@/lib/types";
 import { HOUSE_IMAGES } from "@/lib/house-images";
-import { HOUSE_MEDIA } from "@/lib/house-media";
+import { HOUSE_MEDIA, brandHero, houseSlug } from "@/lib/house-media";
 import FashionHouseSpotlight from "@/components/FashionHouseSpotlight";
 import HouseMediaStrip from "@/components/HouseMediaStrip";
 
@@ -95,13 +95,14 @@ export default async function FashionHousesPage() {
         </div>
       </section>
 
-      <FashionHouseSpotlight houses={houses.filter((house) => house.visual).map((house) => ({
+      <FashionHouseSpotlight houses={houses.filter((house) => brandHero(house.name) || house.visual).map((house) => ({
         name: house.name,
         origin: house.origin,
         since: house.since,
         identity: house.identity,
-        imageUrl: house.visual.imageUrl,
-        imageAlt: house.visual.imageAlt,
+        // Hero "luxury" scrapeado (1200px); la foto Wikimedia queda de respaldo.
+        imageUrl: brandHero(house.name) || house.visual.imageUrl,
+        imageAlt: house.visual?.imageAlt || `Boutique de ${house.name}`,
         anchor: houseId(house.name)
       }))} />
 
@@ -114,22 +115,18 @@ export default async function FashionHousesPage() {
                 className="scroll-mt-36 overflow-hidden rounded-[28px] border border-line bg-surface shadow-soft"
               >
                 <div className="grid min-h-full sm:grid-cols-[0.82fr_1.18fr]">
-                  <div className="relative min-h-[330px] bg-surface2 sm:min-h-full">
+                  <div className="relative min-h-[330px] overflow-hidden bg-surface2 sm:min-h-full">
                     <Image
-                      src={house.visual?.imageUrl || house.featured.imageUrl}
-                      alt={house.visual?.imageAlt || `${house.featured.brand} ${house.featured.name}`}
+                      src={brandHero(house.name) || house.visual?.imageUrl || house.featured.imageUrl}
+                      alt={house.visual?.imageAlt || `Boutique de ${house.name}`}
                       fill
+                      unoptimized
                       sizes="(max-width: 640px) 100vw, (max-width: 1280px) 40vw, 24vw"
-                      className={`transition duration-1000 hover:scale-105 ${house.visual ? "object-cover" : "object-contain p-7"}`}
+                      className={`transition-transform duration-1000 ease-out hover:scale-105 ${brandHero(house.name) || house.visual ? "object-cover" : "object-contain p-7"}`}
                     />
-                    <span className="absolute left-4 top-4 rounded-full bg-bg/85 px-3 py-1.5 text-xs font-medium text-content backdrop-blur">
+                    <span className="liquid-glass absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-medium text-content">
                       {house.pieces.length} piezas
                     </span>
-                    {house.visual && (
-                      <a href={house.visual.creditUrl} target="_blank" rel="noreferrer" className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-[10px] text-white/80 backdrop-blur hover:text-white">
-                        Foto: {house.visual.credit}
-                      </a>
-                    )}
                   </div>
 
                   <div className="flex flex-col p-6 sm:p-7">
@@ -166,21 +163,16 @@ export default async function FashionHousesPage() {
                       clips={HOUSE_MEDIA[house.name]?.clips ?? []}
                     />
 
-                    <div className="mt-auto flex flex-wrap items-center gap-4 pt-6">
+                    <div className="mt-auto flex flex-wrap items-center gap-3 pt-6">
+                      <Link href={`/casas/${houseSlug(house.name)}`} className="btn-primary">
+                        Visitar la casa →
+                      </Link>
                       <Link
                         href={`/tienda?brand=${encodeURIComponent(house.name)}`}
-                        className="btn-accent"
+                        className="btn-ghost"
                       >
                         Ver la selección
                       </Link>
-                      <a
-                        href={house.sourceUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm font-medium text-muted transition hover:text-content"
-                      >
-                        Archivo oficial ↗
-                      </a>
                     </div>
                   </div>
                 </div>

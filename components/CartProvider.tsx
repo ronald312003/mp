@@ -23,6 +23,10 @@ interface CartContextValue {
   setQuantity: (id: string, quantity: number) => void;
   remove: (id: string) => void;
   clear: () => void;
+  /** Mini-carrito lateral (drawer): se abre al añadir una pieza. */
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
 }
 
 const STORAGE_KEY = "maison-privee-cart-v1";
@@ -47,6 +51,7 @@ function validStored(value: unknown): CartItem[] {
 export default function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [ready, setReady] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     try { setItems(validStored(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"))); } catch {}
@@ -81,8 +86,11 @@ export default function CartProvider({ children }: { children: React.ReactNode }
         : item));
     },
     remove(id) { setItems((current) => current.filter((item) => item.id !== id)); },
-    clear() { setItems([]); }
-  }), [items, ready]);
+    clear() { setItems([]); },
+    drawerOpen,
+    openDrawer() { setDrawerOpen(true); },
+    closeDrawer() { setDrawerOpen(false); }
+  }), [items, ready, drawerOpen]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

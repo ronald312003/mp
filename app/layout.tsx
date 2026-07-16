@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Hanken_Grotesk } from "next/font/google";
+import { Fraunces, Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getExchange } from "@/lib/data";
 import CartProvider from "@/components/CartProvider";
+import MiniCart from "@/components/MiniCart";
+import SearchOverlay from "@/components/SearchOverlay";
 import { LiquidGlassDefs } from "@/components/LiquidGlass";
 
-// Serif editorial con cuerpo para titulares y precios (Cormorant resultaba
-// demasiado fina); Hanken Grotesk (sólida y legible) para UI/texto.
-const serif = Playfair_Display({
+// Serif editorial con carácter (Fraunces: ópticamente variable, itálicas con
+// personalidad — más atrayente que Playfair); Hanken Grotesk para UI/texto.
+const serif = Fraunces({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   variable: "--font-serif"
 });
 const sans = Hanken_Grotesk({
@@ -49,6 +52,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header rate={exchange.rate} />
           <main className="min-h-screen">{children}</main>
           <Footer rate={exchange.rate} />
+          <MiniCart rate={exchange.rate} />
+          <SearchOverlay rate={exchange.rate} />
         </CartProvider>
       </body>
     </html>

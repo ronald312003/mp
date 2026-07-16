@@ -1,15 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useCart } from "./CartProvider";
 
 export default function CartIndicator() {
-  const { count, ready } = useCart();
+  const { count, ready, openDrawer } = useCart();
   return (
-    <Link
-      href="/carrito"
-      aria-label={`Bolsa de compra${count ? `, ${count} productos` : " vacía"}`}
-      className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-line text-content transition hover:border-accent"
+    <button
+      type="button"
+      onClick={openDrawer}
+      aria-label={`Abrir bolsa de compra${count ? `, ${count} productos` : " vacía"}`}
+      className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-line text-content transition-transform duration-150 ease-out hover:border-accent active:scale-90"
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
         <path d="M6.5 8.5h11l1 12h-13l1-12Z" />
@@ -23,6 +23,6 @@ export default function CartIndicator() {
           {count > 99 ? "99+" : count}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

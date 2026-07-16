@@ -33,7 +33,7 @@ export default function HomeIconReel() {
       {/* ---- Tira de cine: todo reproduciéndose ---- */}
       <div className="relative">
         <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-3">
-          {ICONIC_PIECES.map((piece) => {
+          {ICONIC_PIECES.map((piece, index) => {
             const portrait = piece.clip.orientation === "portrait";
             return (
               <figure
@@ -44,7 +44,8 @@ export default function HomeIconReel() {
                     : "w-[86vw] max-w-[560px] sm:w-[560px] self-center"
                 }`}
               >
-                <VideoFrame clip={piece.clip} />
+                {/* Los primeros se montan de inmediato: el muro llega ya en movimiento */}
+                <VideoFrame clip={piece.clip} eager={index < 3} />
                 {/* Chip de casa en liquid glass, sobre el video */}
                 <figcaption className="liquid-glass pointer-events-none absolute bottom-3 left-3 right-3 rounded-2xl px-4 py-2.5">
                   <p className={`text-[9px] font-semibold uppercase tracking-[0.2em] ${REEL_ACCENT[piece.accent]}`}>
