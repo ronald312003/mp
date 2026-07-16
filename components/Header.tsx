@@ -24,7 +24,7 @@ const SECONDARY = [
 
 export default function Header({ rate }: { rate: number }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur">
+    <header className="glass-bar sticky top-0 z-40">
       <div className="container-shell">
         <div className="flex h-16 min-w-0 items-center justify-between gap-3 sm:h-[74px]">
           <Link href="/" className="min-w-0 shrink leading-none">

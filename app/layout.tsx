@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getExchange } from "@/lib/data";
 import CartProvider from "@/components/CartProvider";
+import { LiquidGlassDefs } from "@/components/LiquidGlass";
 
 // Serif editorial con cuerpo para titulares y precios (Cormorant resultaba
 // demasiado fina); Hanken Grotesk (sólida y legible) para UI/texto.
@@ -43,6 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <LiquidGlassDefs />
         <CartProvider>
           <Header rate={exchange.rate} />
           <main className="min-h-screen">{children}</main>

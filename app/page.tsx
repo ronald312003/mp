@@ -6,6 +6,7 @@ import Reveal from "@/components/Reveal";
 import StyleConcierge from "@/components/StyleConcierge";
 import HomeHouseReel from "@/components/HomeHouseReel";
 import HomeFilmRoom from "@/components/HomeFilmRoom";
+import HeroShaderBackdrop from "@/components/HeroShaderBackdrop";
 import type { Product } from "@/lib/types";
 
 export const revalidate = 3600;
@@ -39,8 +40,11 @@ export default async function Home() {
   return (
     <div>
       <section className="relative overflow-hidden border-b border-line bg-surface2 py-10 sm:py-20 lg:min-h-[720px] lg:py-24">
-        <Image src="/editorial/maison-atelier.png" alt="Atelier editorial de Maison Privée" fill priority sizes="100vw" className="atelier-drift object-cover object-[64%_center] opacity-45 dark:opacity-20 sm:object-center" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg via-bg/90 to-bg/25" />
+        {/* Fondo animado (shadergradient) bajo la imagen editorial */}
+        <HeroShaderBackdrop />
+        <Image src="/editorial/maison-atelier.png" alt="Atelier editorial de Maison Privée" fill priority sizes="100vw" className="atelier-drift object-cover object-[64%_center] opacity-[0.28] mix-blend-soft-light dark:opacity-20 sm:object-center" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-bg via-bg/85 to-bg/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/60 via-transparent to-transparent" />
         <div className="container-shell relative grid items-center gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:gap-16">
           <div className="min-w-0 max-w-2xl">
             <p className="eyebrow fade-up">Maison Privée · Curaduría personal</p>

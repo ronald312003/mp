@@ -80,7 +80,7 @@ export default function StyleConcierge({ brands }: { brands: string[] }) {
     }`;
 
   return (
-    <div className="min-w-0 max-w-full overflow-hidden rounded-[28px] border border-line bg-surface shadow-lift">
+    <div className="liquid-glass liquid-glass--refract min-w-0 max-w-full overflow-hidden rounded-[28px]">
       {/* progreso */}
       <div className="flex items-center justify-between px-6 pt-6 sm:px-8">
         <div className="flex gap-2">
