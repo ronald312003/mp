@@ -114,14 +114,14 @@ export default async function FashionHousesPage() {
                 id={houseId(house.name)}
                 className="scroll-mt-36 overflow-hidden rounded-[28px] border border-line bg-surface shadow-soft"
               >
-                <div className="grid min-h-full sm:grid-cols-[0.82fr_1.18fr]">
-                  <div className="relative min-h-[330px] overflow-hidden bg-surface2 sm:min-h-full">
+                <div className="grid min-h-full">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-surface2">
                     <Image
                       src={brandHero(house.name) || house.visual?.imageUrl || house.featured.imageUrl}
                       alt={house.visual?.imageAlt || `Boutique de ${house.name}`}
                       fill
                       unoptimized
-                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 40vw, 24vw"
+                      sizes="(max-width: 1280px) 100vw, 50vw"
                       className={`transition-transform duration-1000 ease-out hover:scale-105 ${brandHero(house.name) || house.visual ? "object-cover" : "object-contain p-7"}`}
                     />
                     <span className="liquid-glass absolute left-4 top-4 rounded-full px-3 py-1.5 text-xs font-medium text-content">

@@ -63,7 +63,7 @@ export default function HouseMediaStrip({
             <figure
               key={src}
               className={`group relative overflow-hidden rounded-lg bg-surface ${
-                index === 0 ? "col-span-2 row-span-2" : ""
+                index === 0 ? "col-span-2 row-span-2 aspect-square" : "aspect-square"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -71,8 +71,7 @@ export default function HouseMediaStrip({
                 src={src}
                 alt={`${house} — archivo visual`}
                 loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                style={{ aspectRatio: index === 0 ? "auto" : "1 / 1" }}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
               />
             </figure>
           ))}

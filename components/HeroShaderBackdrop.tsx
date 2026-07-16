@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from "react";
 
 /**
  * Fondo animado del hero con shadergradient (ruucm/shadergradient) — malla WebGL
@@ -27,6 +27,39 @@ const ShaderGradient = dynamic(
 const LIGHT = { c1: "#f3ede2", c2: "#e2c79c", c3: "#b07c46" };
 const DARK = { c1: "#2a2320", c2: "#6b4e35", c3: "#c79a63" };
 
+function supportsWebGL() {
+  try {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true })
+      || canvas.getContext("webgl", { failIfMajorPerformanceCaveat: true });
+
+    if (!context) return false;
+    context.getExtension("WEBGL_lose_context")?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+class WebGLBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(_error: Error, _info: ErrorInfo) {
+    // El degradado CSS que está debajo sigue visible.
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
 function useIsDark() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
@@ -42,11 +75,13 @@ function useIsDark() {
 
 export default function HeroShaderBackdrop() {
   const [mounted, setMounted] = useState(false);
+  const [webgl, setWebgl] = useState(false);
   const [reduced, setReduced] = useState(false);
   const dark = useIsDark();
 
   useEffect(() => {
     setMounted(true);
+    setWebgl(supportsWebGL());
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(mq.matches);
     const onChange = () => setReduced(mq.matches);
@@ -66,13 +101,14 @@ export default function HeroShaderBackdrop() {
           background: `radial-gradient(120% 100% at 78% 18%, ${palette.c2}66 0%, transparent 55%), radial-gradient(90% 90% at 12% 90%, ${palette.c3}44 0%, transparent 60%)`
         }}
       />
-      {mounted && (
-        <ShaderGradientCanvas
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-          pixelDensity={1}
-          fov={40}
-        >
-          <ShaderGradient
+      {mounted && webgl && (
+        <WebGLBoundary>
+          <ShaderGradientCanvas
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            pixelDensity={1}
+            fov={40}
+          >
+            <ShaderGradient
             control="props"
             type="waterPlane"
             animate={reduced ? "off" : "on"}
@@ -96,8 +132,9 @@ export default function HeroShaderBackdrop() {
             reflection={0.1}
             brightness={dark ? 0.9 : 1.25}
             envPreset="dawn"
-          />
-        </ShaderGradientCanvas>
+            />
+          </ShaderGradientCanvas>
+        </WebGLBoundary>
       )}
     </div>
   );
