@@ -21,9 +21,11 @@ const ShaderGradient = dynamic(
   { ssr: false }
 );
 
-// Paletas cálidas de "lujo silencioso": tonos marfil/arena/cacao.
-const LIGHT = { c1: "#f6ecdd", c2: "#dcbd95", c3: "#b98d63" };
-const DARK = { c1: "#4a3b2f", c2: "#7a5c40", c3: "#caa477" };
+// Paletas cálidas de "lujo silencioso". Ahora la base de la app es neutra
+// (porcelana greige), así que el degradado puede tener más presencia y un
+// stop de cognac más rico para que se lea sin ensuciar el hero.
+const LIGHT = { c1: "#f3ede2", c2: "#e2c79c", c3: "#b07c46" };
+const DARK = { c1: "#2a2320", c2: "#6b4e35", c3: "#c79a63" };
 
 function useIsDark() {
   const [dark, setDark] = useState(false);

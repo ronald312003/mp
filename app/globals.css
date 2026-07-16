@@ -2,34 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== Tokens de tema (marrón claro + crema / oscuro espresso) ===== */
+/* ===== Tokens de tema =====
+   Regla de color (lujo silencioso, estilo The Row / Net-a-Porter):
+   base NEUTRA greige + TINTA casi negra para el texto (contraste real, no
+   todo marrón), el cognac/oro SÓLO como acento, y un rouge de firma
+   (inspirado en la suela Louboutin) reservado para momentos icónicos.
+   Antes cada token era una variación del mismo marrón: por eso se veía
+   monocromático y turbio. */
 :root {
-  --c-bg: 252 249 245;         /* marfil cálido */
+  --c-bg: 250 248 244;         /* porcelana cálida (casi blanco) */
   --c-surface: 255 255 255;    /* tarjetas blancas */
-  --c-surface-2: 246 238 228;  /* arena clara */
-  --c-border: 226 210 192;
-  --c-text: 62 48 37;          /* cacao, menos oscuro */
-  --c-muted: 119 98 79;
-  --c-accent: 200 160 120;     /* marrón más claro */
-  --c-accent-strong: 175 140 105;
+  --c-surface-2: 244 240 233;  /* greige desaturado, no arena marrón */
+  --c-border: 227 221 211;     /* gris cálido sutil */
+  --c-text: 26 23 20;          /* tinta casi negra (¡clave del contraste!) */
+  --c-muted: 120 112 102;      /* gris topo desaturado */
+  --c-accent: 176 128 74;      /* cognac/bronce — sólo acento */
+  --c-accent-strong: 150 104 56;
   --c-accent-fg: 255 255 255;
-  --c-inverse: 93 69 50;
-  --c-inverse-fg: 250 246 240;
+  --c-rouge: 199 32 39;        /* rouge de firma (suela roja) */
+  --c-rouge-strong: 168 20 30;
+  --c-rouge-fg: 255 255 255;
+  --c-inverse: 24 21 18;       /* botones tinta */
+  --c-inverse-fg: 250 247 242;
   color-scheme: light;
+
+  /* Curvas de easing más fuertes que las por defecto (Emil Kowalski). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .dark {
-  --c-bg: 66 55 45;            /* marrón cálido, más claro */
-  --c-surface: 80 67 55;
-  --c-surface-2: 94 79 65;
-  --c-border: 126 107 88;
-  --c-text: 253 248 241;
-  --c-muted: 222 207 189;
-  --c-accent: 238 204 164;     /* marrón más claro en oscuro */
-  --c-accent-strong: 247 218 180;
-  --c-accent-fg: 40 30 22;
-  --c-inverse: 242 233 221;    /* botones claros en oscuro */
-  --c-inverse-fg: 44 35 27;
+  --c-bg: 23 20 17;            /* espresso profundo casi negro (da profundidad) */
+  --c-surface: 33 29 25;
+  --c-surface-2: 44 39 34;
+  --c-border: 62 55 48;
+  --c-text: 245 241 234;
+  --c-muted: 176 166 154;
+  --c-accent: 214 166 110;     /* oro cálido, más brillante en oscuro */
+  --c-accent-strong: 228 184 132;
+  --c-accent-fg: 26 20 14;
+  --c-rouge: 227 74 74;        /* rouge más luminoso sobre fondo oscuro */
+  --c-rouge-strong: 240 96 96;
+  --c-rouge-fg: 26 18 18;
+  --c-inverse: 244 240 233;    /* botones claros en oscuro */
+  --c-inverse-fg: 26 21 17;
   color-scheme: dark;
 }
 
@@ -67,15 +84,24 @@ body {
   @apply text-xs uppercase tracking-[0.2em] text-muted;
 }
 
-/* Botones editoriales: esquinas casi rectas, activo con micro-escala */
+/* Botones editoriales: esquinas casi rectas, feedback de pulsación (scale
+   0.97 en :active) y easing fuerte ease-out — nunca transition:all. */
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-editorial bg-inverse px-7 py-3.5 text-sm font-semibold text-inverse-fg transition duration-200 hover:opacity-90 active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial bg-inverse px-7 py-3.5 text-sm font-semibold text-inverse-fg hover:opacity-90 active:scale-[0.97];
+  transition: transform 160ms var(--ease-out), opacity 200ms var(--ease-out);
 }
 .btn-ghost {
-  @apply inline-flex items-center justify-center rounded-editorial border border-line bg-surface px-6 py-3 text-sm font-semibold text-content transition duration-200 hover:border-accent hover:text-accent active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial border border-line bg-surface px-6 py-3 text-sm font-semibold text-content hover:border-accent hover:text-accent active:scale-[0.97];
+  transition: transform 160ms var(--ease-out), color 200ms var(--ease-out), border-color 200ms var(--ease-out);
 }
 .btn-accent {
-  @apply inline-flex items-center justify-center rounded-editorial bg-accent px-7 py-4 text-base font-semibold text-accent-fg transition duration-200 hover:bg-accent-strong active:scale-[0.98];
+  @apply inline-flex items-center justify-center rounded-editorial bg-accent px-7 py-4 text-base font-semibold text-accent-fg hover:bg-accent-strong active:scale-[0.97];
+  transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out);
+}
+/* Firma: CTA en rouge (suela roja) para momentos icónicos. */
+.btn-rouge {
+  @apply inline-flex items-center justify-center rounded-editorial bg-rouge px-7 py-4 text-base font-semibold text-rouge-fg hover:bg-rouge-strong active:scale-[0.97];
+  transition: transform 160ms var(--ease-out), background-color 200ms var(--ease-out);
 }
 
 .field {

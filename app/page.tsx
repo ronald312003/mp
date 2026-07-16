@@ -6,6 +6,7 @@ import Reveal from "@/components/Reveal";
 import StyleConcierge from "@/components/StyleConcierge";
 import HomeHouseReel from "@/components/HomeHouseReel";
 import HomeFilmRoom from "@/components/HomeFilmRoom";
+import HomeIconReel from "@/components/HomeIconReel";
 import HeroShaderBackdrop from "@/components/HeroShaderBackdrop";
 import type { Product } from "@/lib/types";
 
@@ -68,6 +69,25 @@ export default async function Home() {
 
       <section className="container-shell py-12 sm:py-20">
         <Reveal><HomeFilmRoom /></Reveal>
+      </section>
+
+      <section className="border-t border-line bg-surface py-16 sm:py-24">
+        <div className="container-shell">
+          <Reveal>
+            <p className="eyebrow">
+              Piezas de culto <span className="align-middle text-rouge">●</span>
+            </p>
+            <div className="mt-3 mb-9 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <h2 className="max-w-2xl font-serif text-4xl leading-[1.02] text-content sm:text-5xl">
+                Iconos que se reconocen sin logotipo.
+              </h2>
+              <p className="max-w-xs text-base leading-relaxed text-muted">
+                La suela roja, el tacón-logo, la sandalia de cristal. Toca para ver cada pieza en movimiento.
+              </p>
+            </div>
+          </Reveal>
+          <Reveal delay={80}><HomeIconReel /></Reveal>
+        </div>
       </section>
 
       <section className="container-shell py-16 sm:py-24">

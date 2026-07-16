@@ -24,6 +24,9 @@ const config: Config = {
         accent: token("--c-accent"),
         "accent-strong": token("--c-accent-strong"),
         "accent-fg": token("--c-accent-fg"),
+        rouge: token("--c-rouge"),
+        "rouge-strong": token("--c-rouge-strong"),
+        "rouge-fg": token("--c-rouge-fg"),
         inverse: token("--c-inverse"),
         "inverse-fg": token("--c-inverse-fg")
       },

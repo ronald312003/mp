@@ -6,7 +6,9 @@ import { getCatalog } from "@/lib/data";
 import { FASHION_HOUSES } from "@/lib/fashion-houses";
 import type { Product } from "@/lib/types";
 import { HOUSE_IMAGES } from "@/lib/house-images";
+import { HOUSE_MEDIA } from "@/lib/house-media";
 import FashionHouseSpotlight from "@/components/FashionHouseSpotlight";
+import HouseMediaStrip from "@/components/HouseMediaStrip";
 
 export const revalidate = 3600;
 
@@ -157,6 +159,15 @@ export default async function FashionHousesPage() {
                     <p className="mt-5 text-sm text-muted">
                       Disponible en {house.types.join(", ")}.
                     </p>
+
+                    {HOUSE_MEDIA[house.name] && (
+                      <HouseMediaStrip
+                        house={house.name}
+                        signature={HOUSE_MEDIA[house.name].signature}
+                        clips={HOUSE_MEDIA[house.name].clips}
+                        pinterest={HOUSE_MEDIA[house.name].pinterest}
+                      />
+                    )}
 
                     <div className="mt-auto flex flex-wrap items-center gap-4 pt-6">
                       <Link
