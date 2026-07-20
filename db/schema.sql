@@ -1,9 +1,5 @@
 -- ============================================================
 --  Maison Privée — Esquema de base de datos (Neon / PostgreSQL)
---  Ejecuta este script UNA vez en Neon (SQL Editor), y luego
---  ejecuta db/seed.sql para cargar los productos.
--- ============================================================
-
 -- Colecciones: NO son categorías clásicas, sino outfits / estilos /
 -- temporadas (Lujo Silencioso, Elegante, Casual, Oficina, Noche,
 -- Verano, Invierno, Deportivo).
